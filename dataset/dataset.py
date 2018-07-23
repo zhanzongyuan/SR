@@ -8,6 +8,26 @@ import json
 import random
 
 class SRDataset(data.Dataset):
+	"""SR Dataset Class.
+
+	Parameters:
+		image_dir: The directory of the dataset image.
+		objects_dir: The directory of the ROI object extracted from image by Faster RCNN.
+		list_path: The file path of annotation list with the unit of content: image_id, box1, box2, label.
+		input_transform: The transform to process the pu, p1, p2.
+		full_im_transform:	The transform to process with the full image.
+
+	Attributes:
+		image_dir: The directory of the dataset image.
+		objects_dir: The directory of the ROI object extracted from image by Faster RCNN.
+		input_transform: The transform to process the pu, p1, p2.
+		full_im_transform: The transform to process with the full image.
+		names: The image_id list from annotation file.
+		box1s: The box1 list from annotation file.
+		box2s: The box2 list from annotation file.
+		labels: The label list from annotation file.
+
+	"""
 	def __init__(self, image_dir, objects_dir, list_path, input_transform = None, full_im_transform = None):
 		super(SRDataset, self).__init__()
 
@@ -46,9 +66,26 @@ class SRDataset(data.Dataset):
 		list_file.close()
 
 	def __getitem__(self, index):
-		# For normalize
+		"""Get dataset item by index.
 
-		# PISC
+		Parameters:
+			index: The index of one sample in dataset.
+		
+		Returns:
+			union: [Tensor] Union patch of pair in image. (Has been normalised)
+			obj1: [Tensor] Patch of people 1 in pair. (Has been normalised)
+			obj2: [Tensor] Patch of people 2 in pair. (Has been normalised)
+			bpos: [Tensor] Boxes information which is concatence of position of pu, p1, p2. (Has been normalised)
+			target: [Tensor] The relationship labels of thepair.
+			full_im: [Tensor] The full image. (Has been normalised)
+			boxes_14: [Tensor] The box list of objects extracted from the image.
+			categories: [Tensor] The categories of each object in `boxes_14`. And the first cell is the length of categories.
+
+		"""
+
+		# For normalize.
+
+		# PISC.
 		bbox_min = 0
 		# bbox_max = 1497
 		bbox_m = 1497.
@@ -64,7 +101,7 @@ class SRDataset(data.Dataset):
 		box2 = self.box2s[index]
 		obj2 = img.crop((box2[0], box2[1], box2[2], box2[3]))
 
-		# union
+		# Union patch.
 		u_x1 = min(box1[0], box2[0])
 		u_y1 = min(box1[1], box2[1])
 		u_x2 = max(box1[2], box2[2])
@@ -84,7 +121,7 @@ class SRDataset(data.Dataset):
 		bpos =  box1 + box2
 		bpos = np.array(bpos, dtype=np.float32)
 
-		# normalize
+		# Normalize.
 		bpos[0:4] = 2 * (bpos[0:4] - bbox_min) / bbox_m - 1
 		bpos[4] = 2 * (bpos[4] - area_min) / area_m - 1
 		bpos[5:9] = 2 * (bpos[5:9] - bbox_min) / bbox_m - 1
@@ -106,21 +143,20 @@ class SRDataset(data.Dataset):
 		bboxes_categories = json.load(open(path))
 		bboxes = torch.Tensor(bboxes_categories['bboxes'])
 
-		# re-scale
+		# Re-scale according to origin image.
 		bboxes[:, 0::4] = 448. / w * bboxes[:, 0::4]
 		bboxes[:, 1::4] = 448. / h * bboxes[:, 1::4]
 		bboxes[:, 2::4] = 448. / w * bboxes[:, 2::4]
 		bboxes[:, 3::4] = 448. / h * bboxes[:, 3::4]
 
-		# print bboxes
-
+		# Print bboxes.
 		max_rois_num = 19  # {detection threshold: max rois num} {0.3: 19, 0.4: 17, 0.5: 14, 0.6: 13, 0.7: 12}
 		bboxes_14 = torch.zeros((max_rois_num, 4))
-		bboxes_14[0:bboxes.size(0), :] = bboxes
+		bboxes_14[0:bboxes.size(0), :] = bboxes  # If max_rois_num < bboxes.size(0)?
 
+		# Get categories.
 		categories = torch.IntTensor(max_rois_num + 1).fill_(-1)
-		categories[0] = len(bboxes_categories['categories'])
-
+		categories[0] = len(bboxes_categories['categories'])  # Why make the first position with len?
 		end_idx = categories[0] + 1
 		categories[1: end_idx] = torch.IntTensor(bboxes_categories['categories'])
 

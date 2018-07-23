@@ -11,15 +11,13 @@ import torch.distributed as dist
 import torch.optim
 import torch.utils.data
 import torch.utils.data.distributed
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
 import torchvision.models as models
-from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import gc
 
+from utils.metric import AverageMeter, accuracy
 from networks.GRM import GRM
-from dataset.dataset import SRDataset
+from dataset.loader import get_test_loader
 
 model_names = sorted(name for name in models.__dict__
 	if name.islower() and not name.startswith("__")
@@ -54,45 +52,27 @@ parser.add_argument('--result-path', default='', type=str, metavar='PATH',
 
 best_prec1 = 0
 
-def get_test_set(data_dir, objects_dir, test_list):
-	normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-									 std=[0.229, 0.224, 0.225])
-	scale_size = args.scale_size
-	crop_size = args.crop_size
-
-	test_data_transform = transforms.Compose([
-			transforms.Scale((crop_size, crop_size)),
-			transforms.ToTensor(),
-			normalize])  # what about horizontal flip
-
-	test_full_transform = transforms.Compose([
-			transforms.Scale((448, 448)),
-			transforms.ToTensor(),
-			normalize])  # what about horizontal flip
-
-	test_set = SRDataset(data_dir, objects_dir, test_list, test_data_transform, test_full_transform )
-	test_loader = DataLoader(dataset=test_set, num_workers=args.workers,
-							batch_size=args.batch_size, shuffle=False)
-	return test_loader
 
 def main():
 	global args, best_prec1
 	args = parser.parse_args()
 	print args
 
-	# Create dataloader
+	# Create dataloader.
 	print '====> Creating dataloader...'
 	data_dir = args.data
 	test_list = args.testlist
 	objects_dir = args.objects
-	test_loader = get_test_set(data_dir, objects_dir, test_list)
+	scale_size = args.scale_size
+	scale_size = args.crop_size
+	test_loader = get_test_loader(data_dir, objects_dir, test_list, scale_size, crop_size)
 
-	# load network
+	# Load GRM network.
 	print '====> Loading the network...'
 	model = GRM(num_class=args.num_classes, adjacency_matrix=args.adjacency_matrix)
 	# print model
 
-	# load weight
+	# Load fine-tuned weight of network.
 	if args.weights:
 		if os.path.isfile(args.weights):
 			print("====> loading model '{}'".format(args.weights))
@@ -115,7 +95,9 @@ def main():
 		print '------Write out result---'
 		for i in range(args.num_classes):
 			fnames.append(open(args.result_path + str(i) + '.txt', 'w'))
+	
 	validate(test_loader, model, criterion, fnames)
+
 	if args.write_out:
 		for i in range(args.num_classes):
 			fnames[i].close()
@@ -208,36 +190,6 @@ def validate(val_loader, model, criterion, fnames=[]):
 
 	print(' * Prec@1 {top1.avg[0]:.3f}\t * Loss {loss.avg:.4f}'.format(top1=top1, loss=losses))
 	return top1.avg[0]
-
-def accuracy(output, target, topk=(1,)):
-	maxk = max(topk)
-	batch_size = target.size(0)
-
-	_, pred = output.topk(maxk, 1, True, True)
-	pred = pred.t()
-	correct = pred.eq(target.view(1, -1).expand_as(pred))
-
-	res = []
-	for k in topk:
-		correct_k = correct[:k].view(-1).float().sum(0)
-		res.append(correct_k.mul_(100.0 / batch_size))
-	return res
-
-class AverageMeter(object):
-	def __init__(self):
-		self.reset()
-
-	def reset(self):
-		self.val = 0
-		self.avg = 0
-		self.sum = 0
-		self.count = 0
-
-	def update(self, val, n=1):
-		self.val = val
-		self.sum += val * n
-		self.count += n
-		self.avg = self.sum / self.count
 
 
 if __name__=='__main__':
