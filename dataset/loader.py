@@ -1,12 +1,12 @@
 import torchvision.datasets as datasets
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
-from dataset.dataset import SRDataset
+from dataset import SRDataset
 
 def get_test_loader(data_dir, objects_dir, test_list, scale_size, crop_size):
 	"""Create dataset and return dataset loader of test Dataset.
 
-	Parameters:
+	Args:
 		data_dir: The directory of the dataset image.
 		objects_dir: The directory of the ROI object extracted from image by Faster RCNN.
 		test_list: The file path of annotation list with the unit of content: image_id, box1, box2, label.

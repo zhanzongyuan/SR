@@ -10,7 +10,7 @@ import random
 class SRDataset(data.Dataset):
 	"""SR Dataset Class.
 
-	Parameters:
+	Args:
 		image_dir: The directory of the dataset image.
 		objects_dir: The directory of the ROI object extracted from image by Faster RCNN.
 		list_path: The file path of annotation list with the unit of content: image_id, box1, box2, label.
@@ -68,7 +68,7 @@ class SRDataset(data.Dataset):
 	def __getitem__(self, index):
 		"""Get dataset item by index.
 
-		Parameters:
+		Args:
 			index: The index of one sample in dataset.
 		
 		Returns:

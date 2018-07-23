@@ -10,6 +10,32 @@ from vgg_v1 import vgg16_rois_v1
 import math
 
 class GRM(nn.Module):
+	"""Graph Reasoning Model.
+
+	Args:
+		num_class:
+		ggnn_hidden_channel:
+		ggnn_output_channel:
+		time_step:
+		attr_num:
+		adjacency_matrix:
+	
+	Attributes:
+		_num_class:
+		_ggnn_hidden_channel:
+		_ggnn_output_channel:
+		_time_step:
+		_adjacency_matrix:
+		_attr_num:
+		_graph_num:
+
+		fg:
+		full_im_net:
+		ggnn:
+		classifiler:
+		ReLU:
+
+	"""
 	def __init__(self, num_class = 3,
 				ggnn_hidden_channel = 4098,
 				ggnn_output_channel = 512, time_step = 3,
@@ -47,6 +73,21 @@ class GRM(nn.Module):
 		self._initialize_weights()
 
 	def forward(self, union, b1, b2, b_geometric, full_im, rois, categories):
+		"""GRM forward.
+
+		Args:
+			union:
+			b1:
+			b2:
+			b_geometric:
+			full_im:
+			rois:
+			categories:
+
+		Returns:
+			final_scores:
+
+		"""
 		batch_size = union.size()[0]
 		# full image
 		rois_feature = self.full_im_net(full_im, rois, categories)
@@ -73,18 +114,17 @@ class GRM(nn.Module):
 		contextual[:, 0: self._num_class, 2:] = fc7_feature_norm_enlarge
 		ggnn_input = contextual.view(batch_size, -1)
 
-		#ggnn forward
+		# ggnn forward
 		ggnn_feature = self.ggnn(ggnn_input)
 
 		ggnn_feature_norm = ggnn_feature.view(batch_size * self._num_class, -1)
 
-		#classifier
+		# classifier
 		final_scores = self.classifier(ggnn_feature_norm).view(batch_size, -1)
 		
 		return final_scores
 
 	def _initialize_weights(self):
-
 		for m in self.classifier.modules():
 			cnt = 0
 			if isinstance(m, nn.Linear):
