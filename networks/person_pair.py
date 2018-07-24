@@ -21,7 +21,7 @@ class person_pair(nn.Module):
 
         self._initialize_weights()
 
-    # x1 = union, x2 = object1, x3 = object2, x4 = bbox geometric info
+    # x1 = pu, x2 = p1, x3 = p2, x4 = bbox geometric info
     def forward(self, x1, x2, x3, x4): 
         x1 = self.resnet101_union(x1)
         x2 = self.resnet101_a(x2)
