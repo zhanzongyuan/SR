@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from dataset import SRDataset
 
-def get_test_loader(data_dir, objects_dir, test_list, scale_size, crop_size):
+def get_test_loader(data_dir, objects_dir, test_list, scale_size, crop_size, workers, batch_size):
 	"""Create dataset and return dataset loader of test Dataset.
 
 	Args:
@@ -32,6 +32,6 @@ def get_test_loader(data_dir, objects_dir, test_list, scale_size, crop_size):
 			normalize])  # what about horizontal flip
 
 	test_set = SRDataset(data_dir, objects_dir, test_list, test_data_transform, test_full_transform )
-	test_loader = DataLoader(dataset=test_set, num_workers=args.workers,
-							batch_size=args.batch_size, shuffle=False)
+	test_loader = DataLoader(dataset=test_set, num_workers=workers,
+							batch_size=batch_size, shuffle=False)
 	return test_loader

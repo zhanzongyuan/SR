@@ -66,7 +66,9 @@ def main():
 	objects_dir = args.objects
 	scale_size = args.scale_size
 	crop_size = args.crop_size
-	test_loader = get_test_loader(data_dir, objects_dir, test_list, scale_size, crop_size)
+	workers = args.workers
+	batch_size = args.batch_size
+	test_loader = get_test_loader(data_dir, objects_dir, test_list, scale_size, crop_size, workers, batch_size)
 
 	# Load GRM network.
 	print '====> Loading the network...'
