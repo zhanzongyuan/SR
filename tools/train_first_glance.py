@@ -47,6 +47,8 @@ parser.add_argument('-m', '--momentum', default=0.9, type=float, metavar='N',
 					help='optimizer\'s momentum in training')
 parser.add_argument('--wd', '--weight-decay', default=0.0005, type=float, metavar='N',
 					help='optimizer\'s weight-decay in training')
+parser.add_argument('-e', '--epoch', default=100, type=int, metavar='N',
+					help='training epoch number')
 
 """Other argument.
 """
@@ -85,7 +87,7 @@ def main():
 	model = First_Glance(num_classes=args.num_classes)
 	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
-	# Load fine-tuned weight of network.
+	"""Load fine-tuned weight of network.
 	if args.weights:
 		if os.path.isfile(args.weights):
 			print("====> loading model '{}'".format(args.weights))
@@ -94,6 +96,7 @@ def main():
 			model.load_state_dict(checkpoint_dict)
 		else:
 			print("====> no pretrain model at '{}'".format(args.weights))
+	"""
 	
 	model.cuda()
 	criterion = nn.CrossEntropyLoss().cuda()
@@ -101,8 +104,13 @@ def main():
 
 	# Train first-glance model.
 	for epoch in range(args.epoch):
-		train(train_loader, model, criterion, optimizer, args)
-		validate(test_loader, model, criterion, args)
+		train(train_loader, model, criterion, optimizer, args, epoch)
+		validate(test_loader, model, criterion, args, epoch)
+		# Save model every epoch.
+		
+
+
+
 
 	"""Write out.
 	fnames = []
@@ -118,7 +126,7 @@ def main():
 			fnames[i].close()
 	"""
 
-def train(train_loader, model, criterion, optimizer, args, fnames=[]):
+def train(train_loader, model, criterion, optimizer, args, epoch, fnames=[]):
 	batch_time = AverageMeter()
 	losses = AverageMeter()
 	top1 = AverageMeter()
@@ -129,7 +137,7 @@ def train(train_loader, model, criterion, optimizer, args, fnames=[]):
 	tp = {} # precision
 	p = {}  # prediction
 	r = {}  # recall
-	for i, (union, obj1, obj2, bpos, target, full_im, bboxes_14, categories) in enumerate(train_loader):
+	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader):
 		batch_size = bboxes_14.shape[0]
 		cur_rois_sum = categories[0,0]
 		bboxes = bboxes_14[0, 0:categories[0,0], :]
@@ -137,19 +145,16 @@ def train(train_loader, model, criterion, optimizer, args, fnames=[]):
 			bboxes = torch.cat((bboxes, bboxes_14[b, 0:categories[b,0], :]), 0)
 			cur_rois_sum += categories[b,0]
 		assert(bboxes.size(0) == cur_rois_sum), 'Bboxes num must equal to categories num'
-		
+
 		target = target.cuda(async=True)
 		union_var = torch.autograd.Variable(union, volatile=True).cuda()
 		obj1_var = torch.autograd.Variable(obj1, volatile=True).cuda()
 		obj2_var = torch.autograd.Variable(obj2, volatile=True).cuda()
 		bpos_var = torch.autograd.Variable(bpos, volatile=True).cuda()
-		full_im_var = torch.autograd.Variable(full_im, volatile=True).cuda()
-		bboxes_var = torch.autograd.Variable(bboxes, volatile=True).cuda()
-		categories_var = torch.autograd.Variable(categories, volatile=True).cuda()
 		
 		target_var = torch.autograd.Variable(target, volatile=True)
 
-		output = model(union_var, obj1_var, obj2_var, bpos_var, full_im_var, bboxes_var, categories_var)
+		output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
 		
 		loss = criterion(output, target_var)
 		losses.update(loss.data[0], union.size(0))
@@ -164,7 +169,7 @@ def train(train_loader, model, criterion, optimizer, args, fnames=[]):
 		end = time.time()
 
 		if i % args.print_freq == 0:
-			print('Test: [{0}/{1}]\t'
+			print('Train: [{0}/{1}]\t'
 					'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
 					'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
 					'Prec@1 {top1.val[0]:.3f} ({top1.avg[0]:.3f})\t'.format(
@@ -209,10 +214,10 @@ def train(train_loader, model, criterion, optimizer, args, fnames=[]):
 	print 'precision: ', precision
 	print 'recall: ', recall
 
-	print(' * Prec@1 {top1.avg[0]:.3f}\t * Loss {loss.avg:.4f}'.format(top1=top1, loss=losses))
+	print('Train: [Epoch {0}/{1}] * Prec@1 {top1.avg[0]:.3f}\t * Loss {loss.avg:.4f}'.format(epoch, args.epoch, top1=top1, loss=losses))
 	return top1.avg[0]
 
-def validate(val_loader, model, criterion, args, fnames=[]):
+def validate(val_loader, model, criterion, args, epoch, fnames=[]):
 	batch_time = AverageMeter()
 	losses = AverageMeter()
 	top1 = AverageMeter()
@@ -223,7 +228,7 @@ def validate(val_loader, model, criterion, args, fnames=[]):
 	tp = {} # precision
 	p = {}  # prediction
 	r = {}  # recall
-	for i, (union, obj1, obj2, bpos, target, full_im, bboxes_14, categories) in enumerate(val_loader):
+	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(val_loader):
 		batch_size = bboxes_14.shape[0]
 		cur_rois_sum = categories[0,0]
 		bboxes = bboxes_14[0, 0:categories[0,0], :]
@@ -237,13 +242,10 @@ def validate(val_loader, model, criterion, args, fnames=[]):
 		obj1_var = torch.autograd.Variable(obj1, volatile=True).cuda()
 		obj2_var = torch.autograd.Variable(obj2, volatile=True).cuda()
 		bpos_var = torch.autograd.Variable(bpos, volatile=True).cuda()
-		full_im_var = torch.autograd.Variable(full_im, volatile=True).cuda()
-		bboxes_var = torch.autograd.Variable(bboxes, volatile=True).cuda()
-		categories_var = torch.autograd.Variable(categories, volatile=True).cuda()
 		
 		target_var = torch.autograd.Variable(target, volatile=True)
 
-		output = model(union_var, obj1_var, obj2_var, bpos_var, full_im_var, bboxes_var, categories_var)
+		output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
 		
 		loss = criterion(output, target_var)
 		losses.update(loss.data[0], union.size(0))
@@ -297,7 +299,7 @@ def validate(val_loader, model, criterion, args, fnames=[]):
 	print 'precision: ', precision
 	print 'recall: ', recall
 
-	print(' * Prec@1 {top1.avg[0]:.3f}\t * Loss {loss.avg:.4f}'.format(top1=top1, loss=losses))
+	print('Test: [Epoch {0}/{1}] * Prec@1 {top1.avg[0]:.3f}\t * Loss {loss.avg:.4f}'.format(epoch, args.epoch, top1=top1, loss=losses))
 	return top1.avg[0]
 
 

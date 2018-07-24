@@ -40,6 +40,7 @@ python ./tools/train_first_glance.py \
     --lr $lr \
     -m $momentum \
     --wd $weight_decay \
+    --e $epoch \
     --print-freq 100 \
     --write-out --result-path $ResultPath
 
