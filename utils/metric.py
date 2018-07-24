@@ -1,3 +1,4 @@
+# coding=utf-8
 class AverageMeter(object):
 	def __init__(self):
 		self.reset()
