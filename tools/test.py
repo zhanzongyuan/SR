@@ -16,10 +16,6 @@ import torchvision.models as models
 import torch.nn.functional as F
 import gc
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import _init_paths
 
 from utils.metric import AverageMeter, accuracy
@@ -63,7 +59,7 @@ best_prec1 = 0
 def main():
 	global args, best_prec1
 	args = parser.parse_args()
-	print args
+	print(args)
 
 	# Create dataloader.
 	print '====> Creating dataloader...'
