@@ -16,6 +16,12 @@ import torchvision.models as models
 import torch.nn.functional as F
 import gc
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import _init_paths
+
 from utils.metric import AverageMeter, accuracy
 from networks.GRM import GRM
 from dataset.loader import get_test_loader

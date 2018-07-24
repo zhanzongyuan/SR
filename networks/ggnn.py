@@ -72,7 +72,8 @@ class GGNN(nn.Module):
 			
 			"""eq(2): av = Av*h + b.
 
-			av: a_v is the aggregate messsage from node v's neightbors.
+			av: a_v is the aggregate messsage from node v's neightbors. 
+				a_v has shape of [batch_size x num_node x hidden_status_channel].
 			Av: A_v is the sub-matrix of A that denotes the connetions of node v with its neighbors.
 			"""
 			av = torch.cat((torch.bmm(batch_in_matrix, batch_aog_nodes), torch.bmm(batch_out_matrix, batch_aog_nodes)), 2)
@@ -88,7 +89,7 @@ class GGNN(nn.Module):
 
 			#eq(5)
 			hv = torch.tanh(self.fc_eq5_w(av) + self.fc_eq5_u(rv * flatten_aog_nodes))
-
+			
 			flatten_aog_nodes = (1 - zv) * flatten_aog_nodes + zv * hv
 			batch_aog_nodes = flatten_aog_nodes.view(batch_size, node_num, -1)
 

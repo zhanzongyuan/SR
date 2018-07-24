@@ -11,11 +11,11 @@ AdjMatrix="data/adjacencyMatrix/PISC_fine_level_matrix.npy"
 # Number of classes
 num=6
 # Path to save scores
-ResultPath="result/output"
+ResultPath="experiments/logs/"
 
 # Path to model
 ModelPath="models/PISC_fine_level.pth.tar"
 echo $ModelPath
 
-python test.py $ImagePath $ObjectsPath $TestList --weights $ModelPath --adjacency-matrix $AdjMatrix -n $num -b 1 --print-freq 100 --write-out  --result-path $ResultPath
+python ./tools/test.py $ImagePath $ObjectsPath $TestList --weights $ModelPath --adjacency-matrix $AdjMatrix -n $num -b 1 --print-freq 100 --write-out  --result-path $ResultPath
 
