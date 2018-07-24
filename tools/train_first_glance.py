@@ -107,10 +107,7 @@ def main():
 		train(train_loader, model, criterion, optimizer, args, epoch)
 		validate(test_loader, model, criterion, args, epoch)
 		# Save model every epoch.
-		
-
-
-
+		torch.save(model.state_dict(), args.weights)
 
 	"""Write out.
 	fnames = []
