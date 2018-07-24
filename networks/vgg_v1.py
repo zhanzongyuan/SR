@@ -78,6 +78,14 @@ def make_layers(cfg, batch_norm=False):
     return nn.Sequential(*layers)
 
 
+"""cfg represent 4 kind of network structure.
+
+'A': vgg11.
+'B': vgg13.
+'D': vgg16.
+'E': vgg19.
+
+"""
 cfg = {
     'A': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'B': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -190,7 +198,7 @@ def vgg19_bn(pretrained=False, **kwargs):
     return model
 
 def vgg16_rois_v1(pretrained=True):
-    model = VGG16_ROIS_v1(make_layers(cfg['D']), init_weights=False)
+    model = VGG16_ROIS_v1(make_layers(cfg['D']), init_weights=False)  # Load vgg16.
     
     if pretrained:
         pretrained_model = torch.load('vgg16-397923af.pth')
@@ -200,7 +208,6 @@ def vgg16_rois_v1(pretrained=True):
     return model
 
 class VGG16_ROIS_v1(nn.Module):
-
     def __init__(self, features, init_weights=True):
         super(VGG16_ROIS_v1, self).__init__()
         self.features = features
@@ -225,8 +232,15 @@ class VGG16_ROIS_v1(nn.Module):
         [           y2-y1    y1 + y2 - H + 1  ]
         [    0      -----    ---------------  ]
         [           H - 1         H - 1       ]
+
+        Processing a batch of sample with the rois.
+
+        Args:
+            bottom: [batch_size * 512 * 7 * 7]
+            rois: 
+            categories: [batch_size * (max_rois_num+1)]
         """
-        rois = rois.detach()
+        rois = rois.detach()  # Detach roi ?
 
         x1 = rois[:, 0::4] / 16.0
         y1 = rois[:, 1::4] / 16.0

@@ -27,7 +27,7 @@ class GRM(nn.Module):
 		_time_step:
 		_adjacency_matrix:
 		_attr_num:
-		_graph_num:
+		_graph_num: Node number of ggnn graph.
 
 		fg:
 		full_im_net:
@@ -50,7 +50,7 @@ class GRM(nn.Module):
 		self._graph_num = attr_num + num_class
 		
 
-		self.fg = person_pair(num_class)
+		self.fg = person_pair(num_class)  # First glance.
 
 		self.full_im_net = vgg16_rois_v1(pretrained=False)
 
@@ -89,37 +89,37 @@ class GRM(nn.Module):
 
 		"""
 		batch_size = union.size()[0]
-		# full image
-		rois_feature = self.full_im_net(full_im, rois, categories)
+		rois_feature = self.full_im_net(full_im, rois, categories)  # roi_feature has size of [object_num x box_size].
 		contextual = Variable(torch.zeros(batch_size, self._graph_num, self._ggnn_hidden_channel), requires_grad=False).cuda()
-		contextual[:, 0:self._num_class, 0] = 1.
-		contextual[:, self._num_class:, 1] = 1.
+		contextual[:, 0:self._num_class, 0] = 1.  # [1, 0], relationship nodes.
+		contextual[:, self._num_class:, 1] = 1.  # [0, 1], object nodes.
 
 		start_idx = 0
 		end_idx = 0
 
+
+		# Initial GGNN graph hidden status, fill the roi features to object nodes according to categories.
 		for b in range(batch_size):
-			cur_rois_num = categories[b, 0].data[0]
+			cur_rois_num = categories[b, 0].data[0]  # Rois object number. It is not fixed.
 			end_idx += cur_rois_num
 			idxs = categories[b, 1:(cur_rois_num+1)].data.tolist()
 			for i in range(cur_rois_num):
-				contextual[b, int(idxs[i])+self._num_class, 2:] = rois_feature[start_idx+i, :]
+				contextual[b, int(idxs[i])+self._num_class, 2:] = rois_feature[start_idx+i, :]  # Fill the roi features to object nodes according to categories.
 			start_idx = end_idx
 
-		# first glance scores
+		# First glance scores.
 		scores, fc7_feature = self.fg(union, b1, b2, b_geometric)
 		
-		# ggnn input
+		# GGNN input, fill the pair feature to all the relationship nodes.
 		fc7_feature_norm_enlarge = fc7_feature.view(batch_size, 1, -1).repeat(1, self._num_class, 1)
-		contextual[:, 0: self._num_class, 2:] = fc7_feature_norm_enlarge
+		contextual[:, 0: self._num_class, 2:] = fc7_feature_norm_enlarge  # Fill the pair feature to all the relationship nodes.
 		ggnn_input = contextual.view(batch_size, -1)
 
-		# ggnn forward
+		# GGNN forward.
 		ggnn_feature = self.ggnn(ggnn_input)
+		ggnn_feature_norm = ggnn_feature.view(batch_size * self._num_class, -1)  # With size of [batch_size * num_class * output_channel].
 
-		ggnn_feature_norm = ggnn_feature.view(batch_size * self._num_class, -1)
-
-		# classifier
+		# Classifier.
 		final_scores = self.classifier(ggnn_feature_norm).view(batch_size, -1)
 		
 		return final_scores
