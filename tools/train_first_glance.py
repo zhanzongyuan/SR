@@ -82,7 +82,7 @@ def main():
 
 	# Load First Glance network.
 	print '====> Loading the network...'
-	model = First_Glance(num_class=args.num_classes)
+	model = First_Glance(num_classes=args.num_classes)
 	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
 	# Load fine-tuned weight of network.

@@ -16,7 +16,7 @@ ResultPath="experiments/logs/test"
 # Path to model
 ModelPath="models/PISC_fine_level.pth.tar"
 
-python ./tools/test_GRM.py \
+python ./tools/test_grm.py \
     $ImagePath \
     $ObjectsPath \
     $TestList \

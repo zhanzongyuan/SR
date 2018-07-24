@@ -67,7 +67,7 @@ def main():
 
 	# Load GRM network.
 	print '====> Loading the network...'
-	model = GRM(num_class=args.num_classes, adjacency_matrix=args.adjacency_matrix)
+	model = GRM(num_classes=args.num_classes, adjacency_matrix=args.adjacency_matrix)
 	# print model
 
 	# Load fine-tuned weight of network.
