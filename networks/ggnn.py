@@ -45,19 +45,35 @@ class GGNN(nn.Module):
 		self._initialize_weights()
 
 	def forward(self, input):
+		"""GGNN forward process.
+
+		Args:
+			input: It is the graph node hidden status which is initial with feature from rois and [pu, p1, p2, bbox].
+					And the object node is initial according to the object's category. Relationship node is initial with the same
+					feature of [pu, p1, p2, bbox]. The shape of input is [batch_size x -1].
+		"""
 		batch_size = input.size()[0]
 		input = input.view(-1, self.hidden_state_channel)
 
-		node_num = self._in_matrix.size()[0]
-		batch_aog_nodes = input.view(-1, node_num, self.hidden_state_channel)
+		node_num = self._in_matrix.size()[0]  # Number of relationship and object.
+		batch_aog_nodes = input.view(-1, node_num, self.hidden_state_channel)  # Shape of [batch_size x node_num x hidden_state_channel].
 
-		batch_in_matrix = self._in_matrix.repeat(batch_size, 1).view(batch_size, node_num, -1)
-
+		batch_in_matrix = self._in_matrix.repeat(batch_size, 1).view(batch_size, node_num, -1)  # view ?
 		batch_out_matrix = self._out_matrix.repeat(batch_size, 1).view(batch_size, node_num, -1)
 
 		# propogation process
 		for t in xrange(self.time_step):
-			# eq(2)
+			"""hints
+			torch.bmm: Performs a batch matrix-matrix product of matrices stored in batch1 and batch2.
+					batch1 and batch2 must be 3-D tensors each containing the same number of matrices.
+					If batch1 is a (b×n×m) tensor, batch2 is a (b×m×p) tensor, out will be a (b×n×p) tensor.
+			"""
+			
+			"""eq(2): av = Av*h + b.
+
+			av: a_v is the aggregate messsage from node v's neightbors.
+			Av: A_v is the sub-matrix of A that denotes the connetions of node v with its neighbors.
+			"""
 			av = torch.cat((torch.bmm(batch_in_matrix, batch_aog_nodes), torch.bmm(batch_out_matrix, batch_aog_nodes)), 2)
 			av = av.view(batch_size * node_num, -1)
 
@@ -124,12 +140,26 @@ class GGNN(nn.Module):
 				m.bias.data.zero_()
 
 	def load_nodes(self, file):
+		"""Load weight of every edge in graph.
+
+		d_row is the number of relationships.
+		d_col is the object of relationships.
+
+		Args:
+			file: The file path of graph weigth.
+		
+		Returns:
+			in_matrix: The matrix has the shape of [num_node, num_node]  [relationship => object].
+				This is the matrix recording the neightbor nodes connections that point in toward the node.
+			out_matrix: The matrix has the shape of [num_node, num_node]  [object => relationship].
+				This is the matrix recording the neightbor nodes connections that point out from the node.
+		"""
 		mat = np.load(file)
 		d_row, d_col = mat.shape
 
 		in_matrix = np.zeros((d_row + d_col, d_row + d_col))
-		in_matrix[:d_row, d_row:] = mat
+		in_matrix[:d_row, d_row:] = mat  # [d_row x d_col]  [relationship x object]
 		out_matrix = np.zeros((d_row + d_col, d_row + d_col))
-		out_matrix[d_row:, :d_row] = mat.transpose()
+		out_matrix[d_row:, :d_row] = mat.transpose()  # [d_col x d_row]  [object x relationship]
 
 		return in_matrix.astype(np.float32), out_matrix.astype(np.float32)
