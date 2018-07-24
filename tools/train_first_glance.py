@@ -71,7 +71,7 @@ best_prec1 = 0
 
 
 def main():
-	global args, best_prec1
+	# global args, best_prec1
 	args = parser.parse_args()
 	print(args)
 
@@ -101,8 +101,8 @@ def main():
 
 	# Train first-glance model.
 	for epoch in range(args.epoch):
-		train(train_loader, model, criterion)
-		validate(test_loader, model, criterion)
+		train(train_loader, model, criterion, optimizer, args)
+		validate(test_loader, model, criterion, args)
 
 	"""Write out.
 	fnames = []
@@ -118,7 +118,7 @@ def main():
 			fnames[i].close()
 	"""
 
-def train(train_loader, model, criterion, fnames=[]):
+def train(train_loader, model, criterion, optimizer, args, fnames=[]):
 	batch_time = AverageMeter()
 	losses = AverageMeter()
 	top1 = AverageMeter()
@@ -137,7 +137,7 @@ def train(train_loader, model, criterion, fnames=[]):
 			bboxes = torch.cat((bboxes, bboxes_14[b, 0:categories[b,0], :]), 0)
 			cur_rois_sum += categories[b,0]
 		assert(bboxes.size(0) == cur_rois_sum), 'Bboxes num must equal to categories num'
-
+		
 		target = target.cuda(async=True)
 		union_var = torch.autograd.Variable(union, volatile=True).cuda()
 		obj1_var = torch.autograd.Variable(obj1, volatile=True).cuda()
@@ -155,6 +155,10 @@ def train(train_loader, model, criterion, fnames=[]):
 		losses.update(loss.data[0], union.size(0))
 		prec1 = accuracy(output.data, target)
 		top1.update(prec1[0], union.size(0))
+
+		optimizer.zero_grad()
+        loss.backward()
+		optimizer.step()
 
 		batch_time.update(time.time() - end)
 		end = time.time()
@@ -208,7 +212,7 @@ def train(train_loader, model, criterion, fnames=[]):
 	print(' * Prec@1 {top1.avg[0]:.3f}\t * Loss {loss.avg:.4f}'.format(top1=top1, loss=losses))
 	return top1.avg[0]
 
-def validate(val_loader, model, criterion, fnames=[]):
+def validate(val_loader, model, criterion, args, fnames=[]):
 	batch_time = AverageMeter()
 	losses = AverageMeter()
 	top1 = AverageMeter()
