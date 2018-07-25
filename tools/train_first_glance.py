@@ -135,14 +135,6 @@ def train(train_loader, model, criterion, optimizer, args, epoch, fnames=[]):
 	p = {}  # prediction
 	r = {}  # recall
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader):
-		batch_size = bboxes_14.shape[0]
-		cur_rois_sum = categories[0,0]
-		bboxes = bboxes_14[0, 0:categories[0,0], :]
-		for b in range(1, batch_size):
-			bboxes = torch.cat((bboxes, bboxes_14[b, 0:categories[b,0], :]), 0)
-			cur_rois_sum += categories[b,0]
-		assert(bboxes.size(0) == cur_rois_sum), 'Bboxes num must equal to categories num'
-
 		target = target.cuda(async=True)
 		union_var = torch.autograd.Variable(union, volatile=True).cuda()
 		obj1_var = torch.autograd.Variable(obj1, volatile=True).cuda()
@@ -159,7 +151,7 @@ def train(train_loader, model, criterion, optimizer, args, epoch, fnames=[]):
 		top1.update(prec1[0], union.size(0))
 
 		optimizer.zero_grad()
-        loss.backward()
+        	loss.backward()
 		optimizer.step()
 
 		batch_time.update(time.time() - end)
@@ -226,14 +218,6 @@ def validate(val_loader, model, criterion, args, epoch, fnames=[]):
 	p = {}  # prediction
 	r = {}  # recall
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(val_loader):
-		batch_size = bboxes_14.shape[0]
-		cur_rois_sum = categories[0,0]
-		bboxes = bboxes_14[0, 0:categories[0,0], :]
-		for b in range(1, batch_size):
-			bboxes = torch.cat((bboxes, bboxes_14[b, 0:categories[b,0], :]), 0)
-			cur_rois_sum += categories[b,0]
-		assert(bboxes.size(0) == cur_rois_sum), 'Bboxes num must equal to categories num'
-
 		target = target.cuda(async=True)
 		union_var = torch.autograd.Variable(union, volatile=True).cuda()
 		obj1_var = torch.autograd.Variable(obj1, volatile=True).cuda()
