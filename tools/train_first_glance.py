@@ -109,13 +109,13 @@ def main():
 		_, _, prec_val, rec_val, ap_val = validate_eval(test_loader, model, criterion, args, epoch)
 
 		# Print result.
-		writer.add_scalars('Prec@1 (per epoch)', {'train': prec_tri.mean()}, niter)
-		writer.add_scalars('Recall (per epoch)', {'train': rec_tri.mean()}, niter)
-		writer.add_scalars('mAP (per epoch)', {'train': ap_tri.mean()}, niter)
+		writer.add_scalars('Prec@1 (per epoch)', {'train': prec_tri.mean()}, epoch)
+		writer.add_scalars('Recall (per epoch)', {'train': rec_tri.mean()}, epoch)
+		writer.add_scalars('mAP (per epoch)', {'train': ap_tri.mean()}, epoch)
 
-		writer.add_scalars('Prec@1 (per epoch)', {'valid': prec_val.mean()}, niter)
-		writer.add_scalars('Recall (per epoch)', {'valid': rec_val.mean()}, niter)
-		writer.add_scalars('mAP (per epoch)', {'valid': ap_val.mean()}, niter)
+		writer.add_scalars('Prec@1 (per epoch)', {'valid': prec_val.mean()}, epoch)
+		writer.add_scalars('Recall (per epoch)', {'valid': rec_val.mean()}, epoch)
+		writer.add_scalars('mAP (per epoch)', {'valid': ap_val.mean()}, epoch)
 
 		print 'Epoch[%d]:\n\t'(epoch)
 			

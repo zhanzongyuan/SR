@@ -27,7 +27,7 @@ num=6
 ResultPath="experiments/logs/train_first_glance"
 
 # Path to model
-ModelPath="models/First_Glance_fine_model.pth.tar"
+ModelPath="models/First_Glance_fine_model.pth"
 
 python ./tools/train_first_glance.py \
     $ImagePath \

@@ -38,7 +38,7 @@ def multi_scores(pre_scores, labels, options=['precision', 'recall', 'average_pr
 	result = {}
 	for op in options:
 		if op == 'precision':
-			metrics.precision_score(labels, np.argmax(pre_scores, axis=1), average=None)
+			scores = metrics.precision_score(labels, np.argmax(pre_scores, axis=1), average=None)
 		elif op == 'recall':
 			scores = metrics.recall_score(labels, np.argmax(pre_scores, axis=1), average=None)
 		elif op == 'average_precision':
