@@ -163,4 +163,5 @@ class SRDataset(data.Dataset):
 		return union, obj1, obj2, bpos, target, full_im, bboxes_14, categories
 
 	def __len__(self):
-		return len(self.names)
+		# return len(self.names)
+		return 1024

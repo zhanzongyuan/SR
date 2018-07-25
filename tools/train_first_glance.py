@@ -16,9 +16,12 @@ import torchvision.models as models
 import torch.nn.functional as F
 import gc
 
+from tensorboardX import SummaryWriter
+writer=SummaryWriter(comment='train_first_glance')
+
 import _init_paths
 
-from utils.metric import AverageMeter, accuracy
+from utils.metrics import AverageMeter, accuracy, multi_scores
 from networks.person_pair import person_pair as First_Glance
 from dataset.loader import get_test_loader, get_train_loader
 
@@ -62,8 +65,6 @@ parser.add_argument('--world-size', default=1, type=int,
 					help='number of distributed processes')
 parser.add_argument('-n', '--num-classes', default=3, type=int, metavar='N',
 					help='number of classes / categories')
-parser.add_argument('--write-out', dest='write_out', action='store_true',
-					help='write scores')
 parser.add_argument('--crop-size',default=224, type=int,
 					help='crop size')
 parser.add_argument('--result-path', default='', type=str, metavar='PATH',
@@ -104,26 +105,29 @@ def main():
 
 	# Train first-glance model.
 	for epoch in range(args.epoch):
-		train(train_loader, model, criterion, optimizer, args, epoch)
-		validate(test_loader, model, criterion, args, epoch)
-		# Save model every epoch.
-		torch.save(model.state_dict(), args.weights)
+		_, _, prec_tri, rec_tri, ap_tri = train_eval(train_loader, test_loader, model, criterion, optimizer, args, epoch)
+		_, _, prec_val, rec_val, ap_val = validate_eval(test_loader, model, criterion, args, epoch)
 
-	"""Write out.
-	fnames = []
-	if args.write_out:
-		print '------Write out result---'
-		for i in range(args.num_classes):
-			fnames.append(open(args.result_path + str(i) + '.txt', 'w'))
-	
-	validate(test_loader, model, criterion, fnames)
+		# Print result.
+		writer.add_scalars('Prec@1 (per epoch)', {'train': prec_tri.mean()}, niter)
+		writer.add_scalars('Recall (per epoch)', {'train': rec_tri.mean()}, niter)
+		writer.add_scalars('mAP (per epoch)', {'train': ap_tri.mean()}, niter)
 
-	if args.write_out:
-		for i in range(args.num_classes):
-			fnames[i].close()
-	"""
+		writer.add_scalars('Prec@1 (per epoch)', {'valid': prec_val.mean()}, niter)
+		writer.add_scalars('Recall (per epoch)', {'valid': rec_val.mean()}, niter)
+		writer.add_scalars('mAP (per epoch)', {'valid': ap_val.mean()}, niter)
 
-def train(train_loader, model, criterion, optimizer, args, epoch, fnames=[]):
+		print 'Epoch[%d]:\n\t'(epoch)
+			'Train:\n\t\t'
+			'Prec@1 %.3f\n\t\t'%(prec_tri.mean())
+			'Recall %.3f\n\t\t'%(rec_tri.mean())
+			'mAP %.3f\n\t'%(ap_val.mean())
+			'Valid:\n\t\t'
+			'Prec@1 %.3f\n\t\t'%(prec_val.mean())
+			'Recall %.3f\n\t\t'%(rec_val.mean())
+			'mAP %.3f\n\t'%(ap_val.mean())
+
+def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoch, fnames=[]):
 	batch_time = AverageMeter()
 	losses = AverageMeter()
 	top1 = AverageMeter()
@@ -131,9 +135,8 @@ def train(train_loader, model, criterion, optimizer, args, epoch, fnames=[]):
 	model.eval()
 
 	end = time.time()
-	tp = {} # precision
-	p = {}  # prediction
-	r = {}  # recall
+	scores = np.zeros((len(val_loader.dataset), args.num_classes))
+	labels = np.zeros((len(val_loader.dataset), ))
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader):
 		target = target.cuda(async=True)
 		union_var = torch.autograd.Variable(union, volatile=True).cuda()
@@ -147,66 +150,51 @@ def train(train_loader, model, criterion, optimizer, args, epoch, fnames=[]):
 		
 		loss = criterion(output, target_var)
 		losses.update(loss.data[0], union.size(0))
+
 		prec1 = accuracy(output.data, target)
 		top1.update(prec1[0], union.size(0))
 
 		optimizer.zero_grad()
-        	loss.backward()
+        loss.backward()
 		optimizer.step()
 
 		batch_time.update(time.time() - end)
 		end = time.time()
 
 		if i % args.print_freq == 0:
+			"""Every 10 batches, print on screen and print train information on tensorboard
+			"""
 			print('Train: [{0}/{1}]\t'
 					'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
 					'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
 					'Prec@1 {top1.val[0]:.3f} ({top1.avg[0]:.3f})\t'.format(
 						i, len(train_loader), batch_time=batch_time,
 						loss=losses, top1=top1))
+			writer.add_scalars('Loss (per batch)', {'train-10b': loss.data[0]}, niter)
+			writer.add_scalars('Prec@1 (per batch)', {'train-10b': prec1[0]}, niter)
 
-		"""Write out.
-		#####################################
-		# write scores
-		if args.write_out:
-			output_f = F.softmax(output, dim=1)
-			output_np = output_f.data.cpu().numpy()
-			pre = np.argmax(output_np[0])
-			t = target.data.cpu().numpy()[0]
-			if r.has_key(t):
-				r[t] += 1
-			else:
-				r[t] = 1
-			if p.has_key(pre):
-				p[pre] += 1
-			else:
-				p[pre] = 1
-			if pre == t:
-				if tp.has_key(t):
-					tp[t] += 1
-				else:
-					tp[t] = 1
-			
-			for j in range(args.num_classes):
-				fnames[j].write(str(output_np[0][j]) + '\n')
-		#####################################
-		"""
+		if i % (args.print_freq*10) == 0 :
+			niter = epoch * len(train_loader)
+			"""Every 100 batches, print on screen and print validation information on tensorboard
+			"""
+			top1_avg_val, loss_avg_val, prec, recall, ap = validate_eval(val_loader, model, criterion, args, epoch)
+			writer.add_scalars('Loss (per batch)', {'valid': loss_avg_val}, niter)
+			writer.add_scalars('Prec@1 (per batch)', {'valid': top1_avg_val}, niter)
 
-	print 'tp: ', tp
-	print 'p: ', p
-	print 'r: ', r
-	precision = {}
-	recall = {}
-	for k in tp.keys():
-		precision[k] = float(tp[k]) / float(p[k])
-		recall[k] = float(tp[k]) / float(r[k])
-	print 'precision: ', precision
-	print 'recall: ', recall
+			# Save model every 100 batches.
+			torch.save(model.state_dict(), args.weights)
 
-	print('Train: [Epoch {0}/{1}] * Prec@1 {top1.avg[0]:.3f}\t * Loss {loss.avg:.4f}'.format(epoch, args.epoch, top1=top1, loss=losses))
-	return top1.avg[0]
+	
+	res_scores = multi_scores(scores, labels, ['precision', 'recall', 'average_precision'])
+	print('Train: [Epoch {0}/{1}]\t'
+		' * Time {2}mins ({batch_time.avg:.3f}s)\t'
+		' * Loss {loss.avg:.4f}\t'
+		' * Prec@1 {top1.avg[0]:.3f}'.format(epoch, args.epoch, batch_time.sum/60,
+			batch_time=batch_time, loss=losses, top1=top1))
+	
+	return top1.avg[0], losses.avg, res_scores['precision'], res_scores['recall'], res_scores['average_precision']
 
-def validate(val_loader, model, criterion, args, epoch, fnames=[]):
+def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 	batch_time = AverageMeter()
 	losses = AverageMeter()
 	top1 = AverageMeter()
@@ -214,9 +202,8 @@ def validate(val_loader, model, criterion, args, epoch, fnames=[]):
 	model.eval()
 
 	end = time.time()
-	tp = {} # precision
-	p = {}  # prediction
-	r = {}  # recall
+	scores = np.zeros((len(val_loader.dataset), args.num_classes))
+	labels = np.zeros((len(val_loader.dataset), ))
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(val_loader):
 		target = target.cuda(async=True)
 		union_var = torch.autograd.Variable(union, volatile=True).cuda()
@@ -236,52 +223,23 @@ def validate(val_loader, model, criterion, args, epoch, fnames=[]):
 		batch_time.update(time.time() - end)
 		end = time.time()
 
-		if i % args.print_freq == 0:
-			print('Test: [{0}/{1}]\t'
-					'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-					'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-					'Prec@1 {top1.val[0]:.3f} ({top1.avg[0]:.3f})\t'.format(
-						i, len(val_loader), batch_time=batch_time,
-						loss=losses, top1=top1))
+		# Record scores.
+		output_f = F.softmax(output, dim=1)  # To [0, 1]
+		output_np = output_f.data.cpu().numpy()
+		labels_np = target.data.cpu().numpy()
+		b_ind = i*args.batch_size
+		e_ind = b_ind + min(batch_size, label.shape[0])
+		scores[b_ind:e_ind, :] = output_np
+		labels[b_ind:e_ind] = labels_np
+	
+	print('Test: [Epoch {0}/{1}]\t'
+		' * Time {2}mins ({batch_time.avg:.3f}s)\t'
+		' * Loss {loss.avg:.4f}\t'
+		' * Prec@1 {top1.avg[0]:.3f}'.format(epoch, args.epoch, batch_time.sum/60,
+			batch_time=batch_time, top1=top1, loss=losses))
 
-		#####################################
-		## write scores
-		if args.write_out:
-			output_f = F.softmax(output, dim=1)
-			output_np = output_f.data.cpu().numpy()
-			pre = np.argmax(output_np[0])
-			t = target.data.cpu().numpy()[0]
-			if r.has_key(t):
-				r[t] += 1
-			else:
-				r[t] = 1
-			if p.has_key(pre):
-				p[pre] += 1
-			else:
-				p[pre] = 1
-			if pre == t:
-				if tp.has_key(t):
-					tp[t] += 1
-				else:
-					tp[t] = 1
-			
-			for j in range(args.num_classes):
-				fnames[j].write(str(output_np[0][j]) + '\n')
-		#####################################
-
-	print 'tp: ', tp
-	print 'p: ', p
-	print 'r: ', r
-	precision = {}
-	recall = {}
-	for k in tp.keys():
-		precision[k] = float(tp[k]) / float(p[k])
-		recall[k] = float(tp[k]) / float(r[k])
-	print 'precision: ', precision
-	print 'recall: ', recall
-
-	print('Test: [Epoch {0}/{1}] * Prec@1 {top1.avg[0]:.3f}\t * Loss {loss.avg:.4f}'.format(epoch, args.epoch, top1=top1, loss=losses))
-	return top1.avg[0]
+	res_scores = multi_scores(scores, labels, ['precision', 'recall', 'average_precision'])
+	return top1.avg[0], losses.avg, res_scores['precision'], res_scores['recall'], res_scores['average_precision']
 
 
 if __name__=='__main__':

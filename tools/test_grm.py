@@ -18,7 +18,7 @@ import gc
 
 import _init_paths
 
-from utils.metric import AverageMeter, accuracy
+from utils.metrics import AverageMeter, accuracy
 from networks.GRM import GRM
 from dataset.loader import get_test_loader
 

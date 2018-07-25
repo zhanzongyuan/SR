@@ -42,5 +42,5 @@ python ./tools/train_first_glance.py \
     --wd $weight_decay \
     --e $epoch \
     --print-freq 100 \
-    --write-out --result-path $ResultPath
+    --result-path $ResultPath
 
