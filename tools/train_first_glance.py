@@ -94,8 +94,8 @@ def main():
 		if os.path.isfile(args.weights):
 			print("====> loading model '{}'".format(args.weights))
 			checkpoint = torch.load(args.weights)
-			checkpoint_dict = {k.replace('module.',''):v for k,v in checkpoint['state_dict'].items()}
-			model.load_state_dict(checkpoint_dict)
+			# checkpoint_dict = {k.replace('module.',''):v for k,v in checkpoint['state_dict'].items()}
+			model.load_state_dict(checkpoint)
 		else:
 			print("====> no pretrain model at '{}'".format(args.weights))
 	
@@ -140,8 +140,8 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 	model.eval()
 
 	end = time.time()
-	scores = np.zeros((len(val_loader.dataset), args.num_classes))
-	labels = np.zeros((len(val_loader.dataset), ))
+	scores = np.zeros((len(train_loader.dataset), args.num_classes))
+	labels = np.zeros((len(train_loader.dataset), ))
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader):
 		target = target.cuda(async=True)
 		union_var = torch.autograd.Variable(union, requires_grad=False).cuda()
