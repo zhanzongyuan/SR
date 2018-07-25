@@ -120,14 +120,14 @@ def main():
 		print 'Epoch[%d]:\n\t'(epoch)
 			
 		print 'Train:\n\t\t'
-		'Prec@1 %.3f\n\t\t'
-		'Recall %.3f\n\t\t'
-		'mAP %.3f\n\t'%(prec_tri.mean(), rec_tri.mean(), ap_val.mean())
+			'Prec@1 %.3f\n\t\t'
+			'Recall %.3f\n\t\t'
+			'mAP %.3f\n\t'%(prec_tri.mean(), rec_tri.mean(), ap_val.mean())
 		
 		print 'Valid:\n\t\t'
-		'Prec@1 %.3f\n\t\t'
-		'Recall %.3f\n\t\t'
-		'mAP %.3f\n\t'%(prec_val, mean(), rec_val.mean(), ap_val.mean())
+			'Prec@1 %.3f\n\t\t'
+			'Recall %.3f\n\t\t'
+			'mAP %.3f\n\t'%(prec_val, mean(), rec_val.mean(), ap_val.mean())
 
 def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoch, fnames=[]):
 	batch_time = AverageMeter()
@@ -141,12 +141,12 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 	labels = np.zeros((len(val_loader.dataset), ))
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader):
 		target = target.cuda(async=True)
-		union_var = torch.autograd.Variable(union, volatile=True).cuda()
-		obj1_var = torch.autograd.Variable(obj1, volatile=True).cuda()
-		obj2_var = torch.autograd.Variable(obj2, volatile=True).cuda()
-		bpos_var = torch.autograd.Variable(bpos, volatile=True).cuda()
+		union_var = torch.autograd.Variable(union, requires_grad=False).cuda()
+		obj1_var = torch.autograd.Variable(obj1, requires_grad=False).cuda()
+		obj2_var = torch.autograd.Variable(obj2, requires_grad=False).cuda()
+		bpos_var = torch.autograd.Variable(bpos, requires_grad=False).cuda()
 		
-		target_var = torch.autograd.Variable(target, volatile=True)
+		target_var = torch.autograd.Variable(target, requires_grad=False)
 
 		output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
 		
@@ -157,7 +157,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		top1.update(prec1[0], union.size(0))
 
 		optimizer.zero_grad()
-		loss.backward()
+        loss.backward()
 		optimizer.step()
 
 		batch_time.update(time.time() - end)
@@ -166,7 +166,6 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		if i % args.print_freq == 0:
 			"""Every 10 batches, print on screen and print train information on tensorboard
 			"""
-			niter = epoch * len(train_loader)
 			print('Train: [{0}/{1}]\t'
 					'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
 					'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
@@ -177,6 +176,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 			writer.add_scalars('Prec@1 (per batch)', {'train-10b': prec1[0]}, niter)
 
 		if i % (args.print_freq*10) == 0 :
+			niter = epoch * len(train_loader)
 			"""Every 100 batches, print on screen and print validation information on tensorboard
 			"""
 			top1_avg_val, loss_avg_val, prec, recall, ap = validate_eval(val_loader, model, criterion, args, epoch)
@@ -185,15 +185,6 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 
 			# Save model every 100 batches.
 			torch.save(model.state_dict(), args.weights)
-
-		# Record scores.
-		output_f = F.softmax(output, dim=1)  # To [0, 1]
-		output_np = output_f.data.cpu().numpy()
-		labels_np = target.data.cpu().numpy()
-		b_ind = i*args.batch_size
-		e_ind = b_ind + min(args.batch_size, labels_np.shape[0])
-		scores[b_ind:e_ind, :] = output_np
-		labels[b_ind:e_ind] = labels_np
 
 	
 	res_scores = multi_scores(scores, labels, ['precision', 'recall', 'average_precision'])
@@ -217,12 +208,12 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 	labels = np.zeros((len(val_loader.dataset), ))
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(val_loader):
 		target = target.cuda(async=True)
-		union_var = torch.autograd.Variable(union, volatile=True).cuda()
-		obj1_var = torch.autograd.Variable(obj1, volatile=True).cuda()
-		obj2_var = torch.autograd.Variable(obj2, volatile=True).cuda()
-		bpos_var = torch.autograd.Variable(bpos, volatile=True).cuda()
+		union_var = torch.no_grad(union).cuda()
+		obj1_var = torch.no_grad(obj1).cuda()
+		obj2_var = torch.no_grad(obj2).cuda()
+		bpos_var = torch.no_grad(bpos).cuda()
 		
-		target_var = torch.autograd.Variable(target, volatile=True)
+		target_var = torch.no_grad(target)
 
 		output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
 		
@@ -239,7 +230,7 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 		output_np = output_f.data.cpu().numpy()
 		labels_np = target.data.cpu().numpy()
 		b_ind = i*args.batch_size
-		e_ind = b_ind + min(args.batch_size, labels_np.shape[0])
+		e_ind = b_ind + min(batch_size, label.shape[0])
 		scores[b_ind:e_ind, :] = output_np
 		labels[b_ind:e_ind] = labels_np
 	
