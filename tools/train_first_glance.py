@@ -94,8 +94,8 @@ def main():
 		if os.path.isfile(args.weights):
 			print("====> loading model '{}'".format(args.weights))
 			checkpoint = torch.load(args.weights)
-			checkpoint_dict = {k.replace('module.',''):v for k,v in checkpoint['state_dict'].items()}
-			model.load_state_dict(checkpoint_dict)
+			# checkpoint_dict = {k.replace('module.',''):v for k,v in checkpoint['state_dict'].items()}
+			model.load_state_dict(checkpoint)
 		else:
 			print("====> no pretrain model at '{}'".format(args.weights))
 	
@@ -198,6 +198,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		labels_np = target.data.cpu().numpy()
 		b_ind = i*args.batch_size
 		e_ind = b_ind + min(args.batch_size, output_np.shape[0])
+		print(e_ind, b_ind, args.batch_size, output_np.shape[0], min(args.batch_size, output_np.shape[0]))
 		scores[b_ind:e_ind, :] = output_np
 		labels[b_ind:e_ind] = labels_np
 
