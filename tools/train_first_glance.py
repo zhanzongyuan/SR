@@ -189,6 +189,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 
 			# Save model every 100 batches.
 			torch.save(model.state_dict(), args.weights)
+			print('...Model saved')
 		
 		# Record scores.
 		output_f = F.softmax(output, dim=1)  # To [0, 1]
