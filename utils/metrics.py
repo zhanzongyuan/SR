@@ -38,18 +38,16 @@ def multi_scores(pre_scores, labels, options=['precision', 'recall', 'average_pr
 	result = {}
 	for op in options:
 		if op == 'precision':
-			metrics_tool = metrics.precision_score
+			metrics.precision_score(labels, np.argmax(pre_scores, axis=1), average=None)
 		elif op == 'recall':
-			metrics_tool = metrics.recall_score
+			scores = metrics.recall_score(labels, np.argmax(pre_scores, axis=1), average=None)
 		elif op == 'average_precision':
-			metrics_tool = metrics.average_precision_score
+			scores = np.zeros((pre_scores.shape[1], ))
+			for l in range(pre_scores.shape[1]):
+				scores[l] = metrics.average_precision_score((labels == l).astype(int), pre_scores[:, l])
 		else:
 			result.append({})
 			continue
-
-		scores = np.zeros((pre_scores.shape[1], ))
-		for l in range(pre_scores.shape[1]):
-			scores[l] = metrics_tool((labels == l).astype(int), pre_scores[:, l])
 		
 		result[op] = scores
 	
