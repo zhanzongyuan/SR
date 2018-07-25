@@ -89,6 +89,7 @@ def main():
 	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
 	"""Load fine-tuned weight of network.
+	"""
 	if args.weights:
 		if os.path.isfile(args.weights):
 			print("====> loading model '{}'".format(args.weights))
@@ -97,7 +98,7 @@ def main():
 			model.load_state_dict(checkpoint_dict)
 		else:
 			print("====> no pretrain model at '{}'".format(args.weights))
-	"""
+	
 	
 	model.cuda()
 	criterion = nn.CrossEntropyLoss().cuda()
@@ -117,8 +118,8 @@ def main():
 		writer.add_scalars('Recall (per epoch)', {'valid': rec_val.mean()}, epoch)
 		writer.add_scalars('mAP (per epoch)', {'valid': ap_val.mean()}, epoch)
 		
-		print ap_tri
-		print ap_val
+		print('Train AP', ap_tri)
+		print('Valid AP', ap_val)
 		print('[Epoch {0}]:\n  '
 			'Train:\n    '
 			'Prec@1 {1:.3f}\n    '
@@ -196,7 +197,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		output_np = output_f.data.cpu().numpy()
 		labels_np = target.data.cpu().numpy()
 		b_ind = i*args.batch_size
-		e_ind = b_ind + min(args.batch_size, labels_np.shape[0])
+		e_ind = b_ind + min(args.batch_size, output_np.shape[0])
 		scores[b_ind:e_ind, :] = output_np
 		labels[b_ind:e_ind] = labels_np
 
@@ -245,7 +246,7 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 			output_np = output_f.data.cpu().numpy()
 			labels_np = target.data.cpu().numpy()
 			b_ind = i*args.batch_size
-			e_ind = b_ind + min(args.batch_size, labels_np.shape[0])
+			e_ind = b_ind + min(args.batch_size, output_np.shape[0])
 			scores[b_ind:e_ind, :] = output_np
 			labels[b_ind:e_ind] = labels_np
 	
