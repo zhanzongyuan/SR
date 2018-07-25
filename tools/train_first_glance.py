@@ -186,6 +186,15 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 
 			# Save model every 100 batches.
 			torch.save(model.state_dict(), args.weights)
+		
+		# Record scores.
+		output_f = F.softmax(output, dim=1)  # To [0, 1]
+		output_np = output_f.data.cpu().numpy()
+		labels_np = target.data.cpu().numpy()
+		b_ind = i*args.batch_size
+		e_ind = b_ind + min(args.batch_size, labels_np.shape[0])
+		scores[b_ind:e_ind, :] = output_np
+		labels[b_ind:e_ind] = labels_np
 
 	
 	res_scores = multi_scores(scores, labels, ['precision', 'recall', 'average_precision'])
@@ -232,7 +241,7 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 			output_np = output_f.data.cpu().numpy()
 			labels_np = target.data.cpu().numpy()
 			b_ind = i*args.batch_size
-			e_ind = b_ind + min(batch_size, label.shape[0])
+			e_ind = b_ind + min(args.batch_size, labels_np.shape[0])
 			scores[b_ind:e_ind, :] = output_np
 			labels[b_ind:e_ind] = labels_np
 	
