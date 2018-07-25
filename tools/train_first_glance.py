@@ -199,7 +199,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 	
 	res_scores = multi_scores(scores, labels, ['precision', 'recall', 'average_precision'])
 	print('Train: [Epoch {0}/{1}]\t'
-		' * Time {2}mins ({batch_time.avg:.3f}s)\t'
+		' * Time {2:.3f}mins ({batch_time.avg:.3f}s)\t'
 		' * Loss {loss.avg:.4f}\t'
 		' * Prec@1 {top1.avg[0]:.3f}'.format(epoch, args.epoch, batch_time.sum/60,
 			batch_time=batch_time, loss=losses, top1=top1))
@@ -246,7 +246,7 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 			labels[b_ind:e_ind] = labels_np
 	
 	print('Test: [Epoch {0}/{1}]\t'
-		' * Time {2}mins ({batch_time.avg:.3f}s)\t'
+		' * Time {2:.3f}mins ({batch_time.avg:.3f}s)\t'
 		' * Loss {loss.avg:.4f}\t'
 		' * Prec@1 {top1.avg[0]:.3f}'.format(epoch, args.epoch, batch_time.sum/60,
 			batch_time=batch_time, top1=top1, loss=losses))
