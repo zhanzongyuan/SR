@@ -117,7 +117,7 @@ def main():
 		writer.add_scalars('Recall (per epoch)', {'valid': rec_val.mean()}, niter)
 		writer.add_scalars('mAP (per epoch)', {'valid': ap_val.mean()}, niter)
 
-		print 'Epoch[%d]:\n\t'(epoch)
+		print 'Epoch[%d]:\n\t'%(epoch)
 			'Train:\n\t\t'
 			'Prec@1 %.3f\n\t\t'%(prec_tri.mean())
 			'Recall %.3f\n\t\t'%(rec_tri.mean())
