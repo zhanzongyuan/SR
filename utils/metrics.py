@@ -30,7 +30,7 @@ def accuracy(output, target, topk=(1,)):
 	return res
 
 import sklearn.metrics as metrics
-
+import numpy as np
 
 def multi_scores(pre_scores, labels, options=['precision', 'recall', 'average_precision']):
 	"""Make use of metrics.precision_score, metrics.recall_score, metrics.average_precision_score
