@@ -35,6 +35,7 @@ import numpy as np
 def multi_scores(pre_scores, labels, options=['precision', 'recall', 'average_precision']):
 	"""Make use of metrics.precision_score, metrics.recall_score, metrics.average_precision_score
 	"""
+	pre_scores = np.nan_to_num(pre_scores)
 	result = {}
 	num_classes = pre_scores.shape[1]
 	for op in options:

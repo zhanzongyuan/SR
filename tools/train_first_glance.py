@@ -169,7 +169,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 			"""Every 10 batches, print on screen and print train information on tensorboard
 			"""
 			niter = epoch * len(train_loader) + i
-			print('Train: [Batch {0}/{1}|Epoch {2}/{3}]  '
+			print('Train [Batch {0}/{1}|Epoch {2}/{3}]:  '
 					'Time {batch_time.val:.3f} ({batch_time.avg:.3f})  '
 					'Loss {loss.val:.4f} ({loss.avg:.4f})  '
 					'Prec@1 {top1.val:.3f} ({top1.avg:.3f})'.format(
@@ -179,17 +179,17 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		 	writer.add_scalars('Loss (per batch)', {'train-10b': loss.item()}, niter)
 			writer.add_scalars('Prec@1 (per batch)', {'train-10b': prec1[0]}, niter)
 
+		"""
 		if i % (args.print_freq*10) == 0 :
-			niter = epoch * len(train_loader)
-			"""Every 100 batches, print on screen and print validation information on tensorboard
-			"""
+			# Every 100 batches, print on screen and print validation information on tensorboard
+			
 			top1_avg_val, loss_avg_val, prec, recall, ap = validate_eval(val_loader, model, criterion, args, epoch)
 			writer.add_scalars('Loss (per batch)', {'valid': loss_avg_val}, niter)
 			writer.add_scalars('Prec@1 (per batch)', {'valid': top1_avg_val}, niter)
 
 			# Save model every 100 batches.
 			torch.save(model.state_dict(), args.weights)
-		
+		"""
 		# Record scores.
 		output_f = F.softmax(output, dim=1)  # To [0, 1]
 		output_np = output_f.data.cpu().numpy()
@@ -201,7 +201,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 
 	
 	res_scores = multi_scores(scores, labels, ['precision', 'recall', 'average_precision'])
-	print('Train: [Epoch {0}/{1}]  '
+	print('Train [Epoch {0}/{1}]:  '
 		'*Time {2:.2f}mins ({batch_time.avg:.2f}s)  '
 		'*Loss {loss.avg:.4f}  '
 		'*Prec@1 {top1.avg:.3f}'.format(epoch, args.epoch, batch_time.sum/60,
@@ -248,7 +248,7 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 			scores[b_ind:e_ind, :] = output_np
 			labels[b_ind:e_ind] = labels_np
 	
-	print('Test: [Epoch {0}/{1}]  '
+	print('Test [Epoch {0}/{1}]:  '
 		'*Time {2:.2f}mins ({batch_time.avg:.2f}s)  '
 		'*Loss {loss.avg:.4f}  '
 		'*Prec@1 {top1.avg:.3f}'.format(epoch, args.epoch, batch_time.sum/60,
