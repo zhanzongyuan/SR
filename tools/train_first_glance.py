@@ -120,14 +120,14 @@ def main():
 		print 'Epoch[%d]:\n\t'(epoch)
 			
 		print 'Train:\n\t\t'
-			'Prec@1 %.3f\n\t\t'
-			'Recall %.3f\n\t\t'
-			'mAP %.3f\n\t'%(prec_tri.mean(), rec_tri.mean(), ap_val.mean())
+		'Prec@1 %.3f\n\t\t'
+		'Recall %.3f\n\t\t'
+		'mAP %.3f\n\t'%(prec_tri.mean(), rec_tri.mean(), ap_val.mean())
 		
 		print 'Valid:\n\t\t'
-			'Prec@1 %.3f\n\t\t'
-			'Recall %.3f\n\t\t'
-			'mAP %.3f\n\t'%(prec_val, mean(), rec_val.mean(), ap_val.mean())
+		'Prec@1 %.3f\n\t\t'
+		'Recall %.3f\n\t\t'
+		'mAP %.3f\n\t'%(prec_val, mean(), rec_val.mean(), ap_val.mean())
 
 def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoch, fnames=[]):
 	batch_time = AverageMeter()
@@ -157,7 +157,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		top1.update(prec1[0], union.size(0))
 
 		optimizer.zero_grad()
-        loss.backward()
+		loss.backward()
 		optimizer.step()
 
 		batch_time.update(time.time() - end)
@@ -166,6 +166,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		if i % args.print_freq == 0:
 			"""Every 10 batches, print on screen and print train information on tensorboard
 			"""
+			niter = epoch * len(train_loader)
 			print('Train: [{0}/{1}]\t'
 					'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
 					'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
