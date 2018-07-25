@@ -151,7 +151,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
 		
 		loss = criterion(output, target_var)
-		losses.update(loss.data[0], union.size(0))
+		losses.update(loss.item(), union.size(0))
 
 		prec1 = accuracy(output.data, target)
 		top1.update(prec1[0], union.size(0))
@@ -173,7 +173,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 					'Prec@1 {top1.val[0]:.3f} ({top1.avg[0]:.3f})\t'.format(
 						i, len(train_loader), batch_time=batch_time,
 						loss=losses, top1=top1))
-			writer.add_scalars('Loss (per batch)', {'train-10b': loss.data[0]}, niter)
+			writer.add_scalars('Loss (per batch)', {'train-10b': loss.item()}, niter)
 			writer.add_scalars('Prec@1 (per batch)', {'train-10b': prec1[0]}, niter)
 
 		if i % (args.print_freq*10) == 0 :
@@ -229,7 +229,7 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 			output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
 			
 			loss = criterion(output, target_var)
-			losses.update(loss.data[0], union.size(0))
+			losses.update(loss.item(), union.size(0))
 			prec1 = accuracy(output.data, target)
 			top1.update(prec1[0], union.size(0))
 
