@@ -23,8 +23,6 @@ TrainList="data/list/PISC_fine_level_train.txt"
 TestList="data/list/PISC_fine_level_test.txt"
 # Number of classes
 num=6
-# Worker number
-worker=7
 # Path to save scores
 ResultPath="experiments/logs/train_first_glance"
 
@@ -42,8 +40,7 @@ python ./tools/train_first_glance.py \
     --lr $lr \
     -m $momentum \
     --wd $weight_decay \
-    -e $epoch \
-    -j $worker \
+    --e $epoch \
     --print-freq 100 \
     --result-path $ResultPath
 

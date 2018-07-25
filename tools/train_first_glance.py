@@ -144,13 +144,11 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 	labels = np.zeros((len(train_loader.dataset), ))
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader):
 		target = target.cuda(async=True)
-		union_var = torch.autograd.Variable(union, requires_grad=False).cuda()
-		obj1_var = torch.autograd.Variable(obj1, requires_grad=False).cuda()
-		obj2_var = torch.autograd.Variable(obj2, requires_grad=False).cuda()
-		bpos_var = torch.autograd.Variable(bpos, requires_grad=False).cuda()
+		union_var = union_var.cuda()
+		obj1_var = obj1_var.cuda()
+		obj2_var = obj2_var.cuda()
+		bpos_var = bpos_var.cuda()
 		
-		target_var = torch.autograd.Variable(target, requires_grad=False)
-
 		output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
 		
 		loss = criterion(output, target_var)
@@ -223,18 +221,16 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 	scores = np.zeros((len(val_loader.dataset), args.num_classes))
 	labels = np.zeros((len(val_loader.dataset), ))
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(val_loader):
-		target = target.cuda(async=True)
 		with torch.no_grad():
-			union_var = torch.autograd.Variable(union).cuda()
-			obj1_var = torch.autograd.Variable(obj1).cuda()
-			obj2_var = torch.autograd.Variable(obj2).cuda()
-			bpos_var = torch.autograd.Variable(bpos).cuda()
-			
-			target_var = torch.autograd.Variable(target)
+			target = target.cuda(async=True)
+			union_var = union_var.cuda()
+			obj1_var = obj1_var.cuda()
+			obj2_var = obj2_var.cuda()
+			bpos_var = bpos_var.cuda()
 
 			output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
 			
-			loss = criterion(output, target_var)
+			loss = criterion(output, target)
 			losses.update(loss.item(), union.size(0))
 			prec1 = accuracy(output.data, target)
 			top1.update(prec1[0], union.size(0))

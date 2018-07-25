@@ -41,7 +41,7 @@ def get_test_loader(args):
 			transforms.ToTensor(),
 			normalize])  # what about horizontal flip
 
-	test_set = SRDataset(data_dir, objects_dir, test_list, test_data_transform, test_full_transform )
+	test_set = SRDataset(data_dir, objects_dir, test_list, test_data_transform, test_full_transform)
 	test_loader = DataLoader(dataset=test_set, num_workers=workers,
 							batch_size=batch_size, shuffle=False)
 	return test_loader
@@ -85,6 +85,6 @@ def get_train_loader(args):
 
 	train_set = SRDataset(data_dir, objects_dir, train_list, train_data_transform, train_full_transform )
 	train_loader = DataLoader(dataset=train_set, num_workers=workers,
-							batch_size=batch_size, shuffle=False)
+							batch_size=batch_size, shuffle=True)
 	return train_loader
 
