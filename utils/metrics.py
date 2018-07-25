@@ -50,6 +50,6 @@ def multi_scores(pre_scores, labels, options=['precision', 'recall', 'average_pr
 			result.append({})
 			continue
 		
-		result[op] = scores
+		result[op] = np.nan_to_num(scores)
 	
 	return result
