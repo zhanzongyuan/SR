@@ -209,31 +209,32 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 	labels = np.zeros((len(val_loader.dataset), ))
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(val_loader):
 		target = target.cuda(async=True)
-		union_var = torch.no_grad(union).cuda()
-		obj1_var = torch.no_grad(obj1).cuda()
-		obj2_var = torch.no_grad(obj2).cuda()
-		bpos_var = torch.no_grad(bpos).cuda()
-		
-		target_var = torch.no_grad(target)
+		with torch.no_grad():
+			union_var = torch.autograd.Variable(union).cuda()
+			obj1_var = torch.autograd.Variable(obj1).cuda()
+			obj2_var = torch.autograd.Variable(obj2).cuda()
+			bpos_var = torch.autograd.Variable(bpos).cuda()
+			
+			target_var = torch.autograd.Variable(target)
 
-		output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
-		
-		loss = criterion(output, target_var)
-		losses.update(loss.data[0], union.size(0))
-		prec1 = accuracy(output.data, target)
-		top1.update(prec1[0], union.size(0))
+			output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
+			
+			loss = criterion(output, target_var)
+			losses.update(loss.data[0], union.size(0))
+			prec1 = accuracy(output.data, target)
+			top1.update(prec1[0], union.size(0))
 
-		batch_time.update(time.time() - end)
-		end = time.time()
+			batch_time.update(time.time() - end)
+			end = time.time()
 
-		# Record scores.
-		output_f = F.softmax(output, dim=1)  # To [0, 1]
-		output_np = output_f.data.cpu().numpy()
-		labels_np = target.data.cpu().numpy()
-		b_ind = i*args.batch_size
-		e_ind = b_ind + min(batch_size, label.shape[0])
-		scores[b_ind:e_ind, :] = output_np
-		labels[b_ind:e_ind] = labels_np
+			# Record scores.
+			output_f = F.softmax(output, dim=1)  # To [0, 1]
+			output_np = output_f.data.cpu().numpy()
+			labels_np = target.data.cpu().numpy()
+			b_ind = i*args.batch_size
+			e_ind = b_ind + min(batch_size, label.shape[0])
+			scores[b_ind:e_ind, :] = output_np
+			labels[b_ind:e_ind] = labels_np
 	
 	print('Test: [Epoch {0}/{1}]\t'
 		' * Time {2}mins ({batch_time.avg:.3f}s)\t'
