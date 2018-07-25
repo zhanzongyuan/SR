@@ -144,14 +144,14 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 	labels = np.zeros((len(train_loader.dataset), ))
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader):
 		target = target.cuda(async=True)
-		union_var = union_var.cuda()
-		obj1_var = obj1_var.cuda()
-		obj2_var = obj2_var.cuda()
-		bpos_var = bpos_var.cuda()
+		union = union.cuda()
+		obj1 = obj1.cuda()
+		obj2 = obj2.cuda()
+		bpos = bpos.cuda()
 		
-		output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
+		output, _ = model(union, obj1, obj2, bpos)
 		
-		loss = criterion(output, target_var)
+		loss = criterion(output, target)
 		losses.update(loss.item(), union.size(0))
 
 		prec1 = accuracy(output.data, target)
@@ -196,7 +196,6 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		labels_np = target.data.cpu().numpy()
 		b_ind = i*args.batch_size
 		e_ind = b_ind + min(args.batch_size, output_np.shape[0])
-		print(e_ind, b_ind, args.batch_size, output_np.shape[0], min(args.batch_size, output_np.shape[0]))
 		scores[b_ind:e_ind, :] = output_np
 		labels[b_ind:e_ind] = labels_np
 
@@ -223,12 +222,12 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(val_loader):
 		with torch.no_grad():
 			target = target.cuda(async=True)
-			union_var = union_var.cuda()
-			obj1_var = obj1_var.cuda()
-			obj2_var = obj2_var.cuda()
-			bpos_var = bpos_var.cuda()
+			union = union.cuda()
+			obj1 = obj1.cuda()
+			obj2 = obj2.cuda()
+			bpos = bpos.cuda()
 
-			output, _ = model(union_var, obj1_var, obj2_var, bpos_var)
+			output, _ = model(union, obj1, obj2, bpos)
 			
 			loss = criterion(output, target)
 			losses.update(loss.item(), union.size(0))
