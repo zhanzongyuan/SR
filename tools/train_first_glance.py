@@ -117,15 +117,17 @@ def main():
 		writer.add_scalars('Recall (per epoch)', {'valid': rec_val.mean()}, niter)
 		writer.add_scalars('mAP (per epoch)', {'valid': ap_val.mean()}, niter)
 
-		print 'Epoch[%d]:\n\t'%(epoch)
-			'Train:\n\t\t'
-			'Prec@1 %.3f\n\t\t'%(prec_tri.mean())
-			'Recall %.3f\n\t\t'%(rec_tri.mean())
-			'mAP %.3f\n\t'%(ap_val.mean())
-			'Valid:\n\t\t'
-			'Prec@1 %.3f\n\t\t'%(prec_val.mean())
-			'Recall %.3f\n\t\t'%(rec_val.mean())
-			'mAP %.3f\n\t'%(ap_val.mean())
+		print 'Epoch[%d]:\n\t'(epoch)
+			
+		print 'Train:\n\t\t'
+			'Prec@1 %.3f\n\t\t'
+			'Recall %.3f\n\t\t'
+			'mAP %.3f\n\t'%(prec_tri.mean(), rec_tri.mean(), ap_val.mean())
+		
+		print 'Valid:\n\t\t'
+			'Prec@1 %.3f\n\t\t'
+			'Recall %.3f\n\t\t'
+			'mAP %.3f\n\t'%(prec_val, mean(), rec_val.mean(), ap_val.mean())
 
 def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoch, fnames=[]):
 	batch_time = AverageMeter()
