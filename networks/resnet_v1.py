@@ -1,4 +1,11 @@
 # coding=utf-8
+
+"""Code Source:
+https://pytorch.org/docs/stable/_modules/torchvision/models/resnet.html#resnet18
+
+"""
+
+
 import torch.nn as nn
 import math
 import torch.utils.model_zoo as model_zoo

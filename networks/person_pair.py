@@ -4,14 +4,21 @@ import torch.nn as nn
 import math
 import torch.nn.functional as F
 
-from resnet_v1 import ResNet, Bottleneck
+
+import torch.utils.model_zoo as model_zoo
+import torchvision.models as models
 
 class person_pair(nn.Module):
-    def __init__(self, num_classes = 3):
+    def __init__(self, num_classes = 3, pretrained=False):
         super(person_pair, self).__init__()
-        self.resnet101_union = ResNet(Bottleneck, [3, 4, 23, 3])
-        self.resnet101_a = ResNet(Bottleneck, [3, 4, 23, 3])
+        self.resnet101_union = models.resnet101(pretrained=pretrained)
+        self.resnet101_union = nn.Sequential.(*list(self.resnet101_union.children())[:-1])
+
+        self.resnet101_a = models.resnet101(pretrained=pretrained)
+        self.resnet101_a = nn.Sequential.(*list(self.resnet101_a.children())[:-1])
+
         self.resnet101_b = self.resnet101_a
+
 
         self.bboxes = nn.Linear(10, 256)
         self.fc6 = nn.Linear(2048+2048+2048+256, 4096)
