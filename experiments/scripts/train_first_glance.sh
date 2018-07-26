@@ -34,13 +34,8 @@ TestList="data/list/PISC_fine_level_test.txt"
 ResultPath="experiments/logs/train_first_glance"
 # Print frequence
 print_freq=100
-
-
-################## Model arguments ###############
-# Path to save model
-ModelPath="models/First_Glance_checkpoint.pth"
-# Path to load model
-CheckpointPath=""
+# Dir to load/save model checkpoint
+CheckpointDir="models/"
 
 python ./tools/train_first_glance.py \
     $ImagePath \
@@ -56,6 +51,5 @@ python ./tools/train_first_glance.py \
     -j $worker \
     --print-freq $print_freq \
     --result-path $ResultPath \
-    --checkpoint '' \
-    --weights $ModelPath
+    --checkpoint-dir $CheckpointDir
 

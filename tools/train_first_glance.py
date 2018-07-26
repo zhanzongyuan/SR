@@ -22,6 +22,8 @@ writer=SummaryWriter(log_dir='./experiments/logs/train_first_glance')
 import _init_paths
 
 from utils.metrics import AverageMeter, accuracy, multi_scores
+from utils.checkpoint import Checkpoint
+
 from networks.person_pair import person_pair as First_Glance
 from dataset.loader import get_test_loader, get_train_loader
 
@@ -71,17 +73,9 @@ parser.add_argument('--print-freq', '-p', default=10, type=int, metavar='N',
 					help='print frequency (default: 10)')
 parser.add_argument('--result-path', default='', type=str, metavar='PATH',
 					help='path for saving result (default: none)')
+parser.add_argument('--checkpoint-dir', default='', type=str, metavar='PATH',
+					help='directory to load checkpoint weight (default: none)')
 
-
-"""Model arguments
-"""
-parser.add_argument('--checkpoint', default='', type=str, metavar='PATH',
-					help='path to load checkpoint weight (default: none)')
-parser.add_argument('--weights', default='', type=str, metavar='PATH',
-					help='path to save weights (default: none)')
-
-
-best_prec1 = 0
 
 
 def main():
@@ -101,22 +95,16 @@ def main():
 
 	"""Load checkpoint weight of network.
 	"""
-	if args.checkpoint:
-		if os.path.isfile(args.checkpoint):
-			print("====> loading model '{}'".format(args.checkpoint))
-			checkpoint = torch.load(args.checkpoint)
-			# checkpoint_dict = {k.replace('module.',''):v for k,v in checkpoint['state_dict'].items()}
-			model.load_state_dict(checkpoint)
-		else:
-			print("====> no pretrain model at '{}'".format(args.checkpoint))
-	
+	global cp_recorder = Checkpoint(args.checkpoint_path, 'train_first_glance')
+	if args.checkpoint_dir:
+		cp_recorder.load_checkpoint(model)
 	
 	model.cuda()
 	criterion = nn.CrossEntropyLoss().cuda()
 	cudnn.benchmark = True
 			
 	# Train first-glance model.
-	for epoch in range(args.epoch):
+	for epoch in range(cp_recorder.contextual['b_epoch'], args.epoch):
 		_, _, prec_tri, rec_tri, ap_tri = train_eval(train_loader, test_loader, model, criterion, optimizer, args, epoch)
 		_, _, prec_val, rec_val, ap_val = validate_eval(test_loader, model, criterion, args, epoch)
 
@@ -162,7 +150,17 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 	end = time.time()
 	scores = np.zeros((len(train_loader.dataset), args.num_classes))
 	labels = np.zeros((len(train_loader.dataset), ))
+
+	# Checkpoint begin batch.
+	b_batch=0
+	if epoch == cp_recorder.contextual['b_epoch']:
+		b_batch = cp_recorder.contextual['b_batch']
+	
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader):
+		# Jump to checkpoint.
+		if i < b_batch:
+			continue
+
 		target = target.cuda(async=True)
 		union = union.cuda()
 		obj1 = obj1.cuda()
@@ -206,9 +204,9 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 			writer.add_scalars('Loss (per batch)', {'valid': loss_avg_val}, niter)
 			writer.add_scalars('Prec@1 (per batch)', {'valid': top1_avg_val}, niter)
 
-			# Save model every 100 batches.
-			torch.save(model.state_dict(), args.weights)
-			print('...Model saved')
+			# Save checkpoint every 100 batches.
+			cp_recorder.record_contextual({'b_epoch': epoch, 'b_batch': i, 'prec': top1_avg_val, 'loss': loss_avg_val})
+			cp_recorder.save_checkpoint(model)
 		
 		# Record scores.
 		output_f = F.softmax(output, dim=1)  # To [0, 1]
