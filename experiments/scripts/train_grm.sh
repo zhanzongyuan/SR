@@ -34,15 +34,15 @@ TestList="data/list/PISC_fine_level_test.txt"
 
 ################## Record arguments ###############
 # Path to save scores
-ResultPath="experiments/logs/train_first_glance"
+ResultPath="experiments/logs/train_grm"
 # Print frequence
 print_freq=100
 # Dir to load/save model checkpoint
 CheckpointDir="models/"
 # File name
-FileName="first_glance_finetune"
+FileName="grm_finetune"
 
-CUDA_VISIBLE_DEVICES=0 python ./tools/train_first_glance.py \
+CUDA_VISIBLE_DEVICES=0 python ./tools/train_grm.py \
     $ImagePath \
     $ObjectsPath \
     $TrainList \

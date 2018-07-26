@@ -22,9 +22,10 @@ writer=SummaryWriter(log_dir='./experiments/logs/train_first_glance')
 import _init_paths
 
 from utils.metrics import AverageMeter, accuracy, multi_scores
+from utils.checkpoint import Checkpoint
+
 from networks.GRM import GRM as GRM
 from dataset.loader import get_test_loader, get_train_loader
-
 
 model_names = sorted(name for name in models.__dict__
 	if name.islower() and not name.startswith("__")
@@ -72,65 +73,43 @@ parser.add_argument('--print-freq', '-p', default=10, type=int, metavar='N',
 					help='print frequency (default: 10)')
 parser.add_argument('--result-path', default='', type=str, metavar='PATH',
 					help='path for saving result (default: none)')
+parser.add_argument('--checkpoint-dir', default='', type=str, metavar='PATH',
+					help='directory to load checkpoint (default: none)')
+parser.add_argument('--checkpoint-name', default='', type=str, metavar='PATH',
+					help='filename of checkpoint (default: none)')
 
-
-"""Model arguments
-"""
-parser.add_argument('--fg-path', default='', type=str, metavar='PATH',
-					help='path to load first glance finetune model (default: none)')
-parser.add_argument('--checkpoint', default='', type=str, metavar='PATH',
-					help='path to checkpoint weight (default: none)')
-parser.add_argument('--weights', default='', type=str, metavar='PATH',
-					help='path to weights (default: none)')
-
-
-best_prec1 = 0
 
 
 def main():
 	# global args, best_prec1
 	args = parser.parse_args()
+	print('\n====> Input Arguments')
 	print(args)
 
 	# Create dataloader.
-	print '====> Creating dataloader...'
+	print '\n====> Creating dataloader...'
 	train_loader = get_train_loader(args)
 	test_loader = get_test_loader(args)
 
-	# Load GRM network.
+	# Load First Glance network.
 	print '====> Loading the network...'
-    model = GRM(num_classes=args.num_classes, adjacency_matrix=args.adjacency_matrix)
+	model = GRM(num_classes=args.num_classes, adjacency_matrix=args.adjacency_matrix)
 	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=args.momentum)
 
-    # Load First-Glance finetune weights.
-	if args.fg_path:
-		if os.path.isfile(args.fg_path):
-            print("====> loading First-Glance finetune model '{}'".format(args.fg_path))
-			fg_finetune = torch.load(args.fg_path)
-			# checkpoint_dict = {k.replace('module.',''):v for k,v in checkpoint['state_dict'].items()}
-			model.fg.load_state_dict(fg_finetune)
-		else:
-			print("====> no pretrain model at '{}'".format(args.checkpoint))
-	
-
-	"""Load checkpoint weight of network.
+	"""Load checkpoint and weight of network.
 	"""
-	if args.checkpoint:
-		if os.path.isfile(args.checkpoint):
-			print("====> loading GRM model checkpoint '{}'".format(args.checkpoint))
-			checkpoint = torch.load(args.checkpoint)
-			# checkpoint_dict = {k.replace('module.',''):v for k,v in checkpoint['state_dict'].items()}
-			model.load_state_dict(checkpoint)
-		else:
-			print("====> no pretrain model at '{}'".format(args.checkpoint))
-	
+	global cp_recorder
+	if args.checkpoint_dir:
+		cp_recorder = Checkpoint(args.checkpoint_dir, args.checkpoint_name)
+		cp_recorder.load_checkpoint(model)
 	
 	model.cuda()
 	criterion = nn.CrossEntropyLoss().cuda()
 	cudnn.benchmark = True
-
-	# Train GRM model.
-	for epoch in range(args.epoch):
+			
+	# Train first-glance model.
+	print '====> Training...'
+	for epoch in range(cp_recorder.contextual['b_epoch'], args.epoch):
 		_, _, prec_tri, rec_tri, ap_tri = train_eval(train_loader, test_loader, model, criterion, optimizer, args, epoch)
 		_, _, prec_val, rec_val, ap_val = validate_eval(test_loader, model, criterion, args, epoch)
 
@@ -143,17 +122,17 @@ def main():
 		writer.add_scalars('Recall (per epoch)', {'valid': rec_val.mean()}, epoch)
 		writer.add_scalars('mAP (per epoch)', {'valid': ap_val.mean()}, epoch)
 		
-		print('====> Train Scores')
+		print('\n====> Train Scores')
 		print('Train Prec', prec_tri)
 		print('Train Recall', rec_tri)
 		print('Train AP', ap_tri)
 
-		print('====> Valid Scores')
+		print('\n====> Valid Scores')
 		print('Valid Prec', prec_val)
 		print('Valid Recall', rec_val)
 		print('Valid AP', ap_val)
 
-		print('====> Mean Scores')
+		print('\n====> Mean Scores')
 		print('[Epoch {0}]:\n  '
 			'Train:\n    '
 			'Prec@1 {1:.3f}\n    '
@@ -176,9 +155,19 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 	end = time.time()
 	scores = np.zeros((len(train_loader.dataset), args.num_classes))
 	labels = np.zeros((len(train_loader.dataset), ))
-	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader):# Make boxes
-        # Make bboxes
-        batch_size = bboxes_14.shape[0]
+
+	# Checkpoint begin batch.
+	b_batch=0
+	if epoch == cp_recorder.contextual['b_epoch']:
+		b_batch = cp_recorder.contextual['b_batch']
+	
+	for i, (union, obj1, obj2, bpos, target, full_im, bboxes_14, categories) in enumerate(train_loader):
+		# Jump to checkpoint.
+		if i <= b_batch:
+			continue
+
+		# Create bboxes
+		batch_size = bboxes_14.shape[0]
 		cur_rois_sum = categories[0,0]
 		bboxes = bboxes_14[0, 0:categories[0,0], :]
 		for b in range(1, batch_size):
@@ -191,9 +180,9 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		obj1 = obj1.cuda()
 		obj2 = obj2.cuda()
 		bpos = bpos.cuda()
-        full_im = full_im.cuda()
-        bboxes = bboxes.cuda()
-        categories = categories.cuda()
+		full_im = full_im.cuda()
+		bboxes = bboxes.cuda()
+		categories = categories.cuda()
 		
 		output = model(union, obj1, obj2, bpos, full_im, bboxes, categories)
 		
@@ -210,7 +199,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		batch_time.update(time.time() - end)
 		end = time.time()
 		
-		if i % args.print_freq == 0:
+		if (i+1) % args.print_freq == 0:
 			"""Every 10 batches, print on screen and print train information on tensorboard
 			"""
 			niter = epoch * len(train_loader) + i
@@ -225,16 +214,16 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 			writer.add_scalars('Prec@1 (per batch)', {'train-10b': prec1[0]}, niter)
 
 		
-		if i % (args.print_freq*10) == 0 :
+		if (i+1) % (args.print_freq*10) == 0 :
 			# Every 100 batches, print on screen and print validation information on tensorboard
 			
 			top1_avg_val, loss_avg_val, prec, recall, ap = validate_eval(val_loader, model, criterion, args, epoch)
 			writer.add_scalars('Loss (per batch)', {'valid': loss_avg_val}, niter)
 			writer.add_scalars('Prec@1 (per batch)', {'valid': top1_avg_val}, niter)
 
-			# Save model every 100 batches.
-			torch.save(model.state_dict(), args.weights)
-			print('...Model saved')
+			# Save checkpoint every 100 batches.
+			cp_recorder.record_contextual({'b_epoch': epoch, 'b_batch': i, 'prec': top1_avg_val, 'loss': loss_avg_val})
+			cp_recorder.save_checkpoint(model)
 		
 		# Record scores.
 		output_f = F.softmax(output, dim=1)  # To [0, 1]
@@ -265,27 +254,27 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 	end = time.time()
 	scores = np.zeros((len(val_loader.dataset), args.num_classes))
 	labels = np.zeros((len(val_loader.dataset), ))
-	for i, (union, obj1, obj2, bpos, target, full_im, bboxes_14, categories) in enumerate(val_loader):
-        # Make bboxes
-        batch_size = bboxes_14.shape[0]
-		cur_rois_sum = categories[0,0]
-		bboxes = bboxes_14[0, 0:categories[0,0], :]
-		for b in range(1, batch_size):
-			bboxes = torch.cat((bboxes, bboxes_14[b, 0:categories[b,0], :]), 0)
-			cur_rois_sum += categories[b,0]
-		assert(bboxes.size(0) == cur_rois_sum), 'Bboxes num must equal to categories num'
-
+	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(val_loader):
 		with torch.no_grad():
+			# Create bboxes
+			batch_size = bboxes_14.shape[0]
+			cur_rois_sum = categories[0,0]
+			bboxes = bboxes_14[0, 0:categories[0,0], :]
+			for b in range(1, batch_size):
+				bboxes = torch.cat((bboxes, bboxes_14[b, 0:categories[b,0], :]), 0)
+				cur_rois_sum += categories[b,0]
+			assert(bboxes.size(0) == cur_rois_sum), 'Bboxes num must equal to categories num'
+
 			target = target.cuda(async=True)
 			union = union.cuda()
 			obj1 = obj1.cuda()
 			obj2 = obj2.cuda()
 			bpos = bpos.cuda()
-            full_im = full_im.cuda()
-            bboxes = bboxes.cuda()
-            categories = categories.cuda()
+			full_im = full_im.cuda()
+			bboxes = bboxes.cuda()
+			categories = categories.cuda()
 
-		    output = model(union, obj1, obj2, bpos, full_im, bboxes, categories)
+			output = model(union, obj1, obj2, bpos, full_im, bboxes, categories)
 			
 			loss = criterion(output, target)
 			losses.update(loss.item(), union.size(0))
