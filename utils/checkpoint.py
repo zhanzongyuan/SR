@@ -1,13 +1,13 @@
 import torch
 import os
 class Checkpoint:
-    def __init__(self, checkpoint_path='', filename=''):
+    def __init__(self, checkpoint_dir='', filename=''):
         self.contextual = {}
         self.contextual['b_epoch'] = 0
         self.contextual['b_batch'] = 0
         self.contextual['prec'] = 0
         self.contextual['loss'] = 0
-        self.checkpoint_path = checkpoint_path
+        self.checkpoint_dir = checkpoint_dir
         self.filename=filename
         self.best_prec1 = 0
         self.best=False
@@ -22,7 +22,7 @@ class Checkpoint:
 
 
     def save_checkpoint(self, model):
-        path = os.path.join(self.checkpoint_path, self.filename)
+        path = os.path.join(self.checkpoint_dir, self.filename)
 
         torch.save(self.contextual, path+'_contextual.pth')
 		print('...Contextual saved')
@@ -36,7 +36,7 @@ class Checkpoint:
 		    print('...Best model and contextual saved')
 
     def load_checkpoint(self, model):
-        path = os.path.join(self.checkpoint_path, self.filename)
+        path = os.path.join(self.checkpoint_dir, self.filename)
 
         if path and os.path.isfile(path+'_contextual.pth'):
             self.contextual = torch.load(path+'_contextual.pth')

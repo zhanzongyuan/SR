@@ -1,6 +1,9 @@
 #!/bin/bash
 # Initial logs
 # rm -rf ./experiments/logs/train_first_glance
+mkdir ./experiments/logs
+mkdir ./models
+mkdir ./experiments/history
 
 ################## Train arguments ###############
 # Train epoch
@@ -36,8 +39,10 @@ ResultPath="experiments/logs/train_first_glance"
 print_freq=100
 # Dir to load/save model checkpoint
 CheckpointDir="models/"
+# File name
+FileName="first_glance_finetune"
 
-python ./tools/train_first_glance.py \
+CUDA_VISIBLE_DEVICES=0 python ./tools/train_first_glance.py \
     $ImagePath \
     $ObjectsPath \
     $TrainList \
@@ -51,5 +56,6 @@ python ./tools/train_first_glance.py \
     -j $worker \
     --print-freq $print_freq \
     --result-path $ResultPath \
-    --checkpoint-dir $CheckpointDir
+    --checkpoint-dir $CheckpointDir \
+    --checkpoint-name $FileName
 

@@ -74,7 +74,9 @@ parser.add_argument('--print-freq', '-p', default=10, type=int, metavar='N',
 parser.add_argument('--result-path', default='', type=str, metavar='PATH',
 					help='path for saving result (default: none)')
 parser.add_argument('--checkpoint-dir', default='', type=str, metavar='PATH',
-					help='directory to load checkpoint weight (default: none)')
+					help='directory to load checkpoint (default: none)')
+parser.add_argument('--checkpoint-name', default='', type=str, metavar='PATH',
+					help='filename of checkpoint (default: none)')
 
 
 
@@ -97,7 +99,7 @@ def main():
 	"""
 	global cp_recorder
 	if args.checkpoint_dir:
-		cp_recorder = Checkpoint(args.checkpoint_dir, 'train_first_glance')
+		cp_recorder = Checkpoint(args.checkpoint_dir, args.checkpoint_name)
 		cp_recorder.load_checkpoint(model)
 	
 	model.cuda()
