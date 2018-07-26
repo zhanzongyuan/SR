@@ -26,7 +26,8 @@ class person_pair(nn.Module):
         self.ReLU = nn.ReLU(False)
         self.Dropout = nn.Dropout()
 
-        self._initialize_weights()
+        if not pretrained:
+            self._initialize_weights()
 
     # x1 = pu, x2 = p1, x3 = p2, x4 = bbox geometric info
     def forward(self, x1, x2, x3, x4): 
