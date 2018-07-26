@@ -67,6 +67,11 @@ parser.add_argument('--scale-size',default=256, type=int,
 					help='input size')
 
 
+"""Adjacency Matrix.
+"""
+parser.add_argument('--adjacency-matrix', default='', type=str, metavar='PATH',
+					help='path to adjacency-matrix of graph')
+
 """Record arguments.
 """
 parser.add_argument('--print-freq', '-p', default=10, type=int, metavar='N',
