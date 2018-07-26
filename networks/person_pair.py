@@ -11,6 +11,19 @@ import torchvision.models as models
 class person_pair(nn.Module):
     def __init__(self, num_classes = 3, pretrained=False):
         super(person_pair, self).__init__()
+
+        # Fc classifier.
+        self.bboxes = nn.Linear(10, 256)
+        self.fc6 = nn.Linear(2048+2048+2048+256, 4096)
+        self.fc7 = nn.Linear(4096, num_classes)
+        self.ReLU = nn.ReLU(False)
+        self.Dropout = nn.Dropout()
+        self._initialize_weights()
+        
+        # if not pretrained:
+        #     self._initialize_weights()
+
+        # Resnet models.
         self.resnet101_union = models.resnet101(pretrained=pretrained)
         self.resnet101_union = nn.Sequential(*list(self.resnet101_union.children())[:-1])
 
@@ -18,16 +31,6 @@ class person_pair(nn.Module):
         self.resnet101_a = nn.Sequential(*list(self.resnet101_a.children())[:-1])
 
         self.resnet101_b = self.resnet101_a
-
-
-        self.bboxes = nn.Linear(10, 256)
-        self.fc6 = nn.Linear(2048+2048+2048+256, 4096)
-        self.fc7 = nn.Linear(4096, num_classes)
-        self.ReLU = nn.ReLU(False)
-        self.Dropout = nn.Dropout()
-
-        if not pretrained:
-            self._initialize_weights()
 
     # x1 = pu, x2 = p1, x3 = p2, x4 = bbox geometric info
     def forward(self, x1, x2, x3, x4): 

@@ -117,17 +117,17 @@ def main():
 		writer.add_scalars('Recall (per epoch)', {'valid': rec_val.mean()}, epoch)
 		writer.add_scalars('mAP (per epoch)', {'valid': ap_val.mean()}, epoch)
 		
-		print('====> Train Scores')
+		print('\n====> Train Scores')
 		print('Train Prec', prec_tri)
 		print('Train Recall', rec_tri)
 		print('Train AP', ap_tri)
 
-		print('====> Valid Scores')
+		print('\n====> Valid Scores')
 		print('Valid Prec', prec_val)
 		print('Valid Recall', rec_val)
 		print('Valid AP', ap_val)
 
-		print('====> Mean Scores')
+		print('\n====> Mean Scores')
 		print('[Epoch {0}]:\n  '
 			'Train:\n    '
 			'Prec@1 {1:.3f}\n    '
