@@ -185,7 +185,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		batch_time.update(time.time() - end)
 		end = time.time()
 		
-		if i % args.print_freq == 0:
+		if (i+1) % args.print_freq == 0:
 			"""Every 10 batches, print on screen and print train information on tensorboard
 			"""
 			niter = epoch * len(train_loader) + i
@@ -200,7 +200,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 			writer.add_scalars('Prec@1 (per batch)', {'train-10b': prec1[0]}, niter)
 
 		
-		if i % (args.print_freq*10) == 0 :
+		if (i+1) % (args.print_freq*10) == 0 :
 			# Every 100 batches, print on screen and print validation information on tensorboard
 			
 			top1_avg_val, loss_avg_val, prec, recall, ap = validate_eval(val_loader, model, criterion, args, epoch)

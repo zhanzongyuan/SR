@@ -1,3 +1,4 @@
+# coding=utf-8
 import torch
 import os
 class Checkpoint:
@@ -25,20 +26,21 @@ class Checkpoint:
         path = os.path.join(self.checkpoint_dir, self.filename)
 
         torch.save(self.contextual, path+'_contextual.pth')
-		print('...Contextual saved')
+	print('...Contextual saved')
 
         torch.save(model.state_dict(), path+'.pth')
-		print('...Model saved')
+	print('...Model saved')
 
         if (self.best):
             torch.save(self.contextual, path+'_contextual_best.pth')
             torch.save(model.state_dict(), path+'_best.pth')
-		    print('...Best model and contextual saved')
+	    print('...Best model and contextual saved')
 
     def load_checkpoint(self, model):
         path = os.path.join(self.checkpoint_dir, self.filename)
 
         if path and os.path.isfile(path+'_contextual.pth'):
+	    print("====> Loading checkpoint contextual '{}'...".format(path+'_contextual.pth'))
             self.contextual = torch.load(path+'_contextual.pth')
 
             # Update best prec.
@@ -48,9 +50,10 @@ class Checkpoint:
             else:
                 self.best = False
         else:
-            print("====> no checkpoint contextual at '{}'".format(path+'_contextual.pth'))
+            print("====> No checkpoint contextual at '{}'".format(path+'_contextual.pth'))
 
         if path and os.path.isfile(path+'.pth'):
+	    print("====> Loading model '{}'...".format(path+'.pth'))
             model.load_state_dict(torch.load(path+'.pth'))
         else:
-            print("====> no pretrain model at '{}'".format(path+'.pth'))
+            print("====> No pretrain model at '{}'".format(path+'.pth'))
