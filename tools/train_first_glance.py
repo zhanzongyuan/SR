@@ -114,7 +114,7 @@ def main():
 	model.cuda()
 	criterion = nn.CrossEntropyLoss().cuda()
 	cudnn.benchmark = True
-
+			
 	# Train first-glance model.
 	for epoch in range(args.epoch):
 		_, _, prec_tri, rec_tri, ap_tri = train_eval(train_loader, test_loader, model, criterion, optimizer, args, epoch)

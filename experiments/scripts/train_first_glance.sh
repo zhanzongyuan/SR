@@ -1,6 +1,6 @@
 #!/bin/bash
 # Initial logs
-rm -rf ./experiments/logs/train_first_glance
+# rm -rf ./experiments/logs/train_first_glance
 
 ################## Train arguments ###############
 # Train epoch
@@ -56,6 +56,6 @@ python ./tools/train_first_glance.py \
     -j $worker \
     --print-freq $print_freq \
     --result-path $ResultPath \
-    --checkpoint $CheckpointPath \
+    --checkpoint '' \
     --weights $ModelPath
 
