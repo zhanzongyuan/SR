@@ -1,4 +1,6 @@
 #!/bin/bash
+# Initial logs
+rm -rf ./experiments/logs/*
 
 ################## Train arguments ###############
 # Train epoch
