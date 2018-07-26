@@ -179,11 +179,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 	if epoch == cp_recorder.contextual['b_epoch']:
 		b_batch = cp_recorder.contextual['b_batch']
 	
-	for i, (union, obj1, obj2, bpos, target, full_im, bboxes_14, categories) in enumerate(train_loader):
-		# Jump to checkpoint.
-		if i <= b_batch:
-			continue
-
+	for i, (union, obj1, obj2, bpos, target, full_im, bboxes_14, categories) in enumerate(train_loader, start=b_batch):
 		# Create bboxes
 		batch_size = bboxes_14.shape[0]
 		cur_rois_sum = categories[0,0]
