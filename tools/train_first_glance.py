@@ -48,7 +48,7 @@ parser.add_argument('--lr', '--learning-rate', default=0.0001, type=float, metav
 					help='optimizer\'s learning rate in training')
 parser.add_argument('-m', '--momentum', default=0.9, type=float, metavar='N',
 					help='optimizer\'s momentum in training')
-parser.add_argument('--wd', '--weight-decay', default=0.0005, type=float, metavar='N',
+parser.add_argument('--wd', '--weight-decay', default=0.0001, type=float, metavar='N',
 					help='optimizer\'s weight-decay in training')
 parser.add_argument('-e', '--epoch', default=100, type=int, metavar='N',
 					help='training epoch number')
@@ -88,7 +88,7 @@ def main():
 	# Load First Glance network.
 	print '====> Loading the network...'
 	model = First_Glance(num_classes=args.num_classes, pretrained=True)
-	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=args.momentum)
 
 	"""Load checkpoint weight of network.
 	"""

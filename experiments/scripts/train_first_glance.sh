@@ -4,9 +4,9 @@
 # Train epoch
 epoch=100
 # Learning rate
-lr=0.0001
+lr=0.001
 # Weight decay
-weight_decay=0.0005
+weight_decay=0.0001
 # Batch size for train
 batch_size=8
 # momentum
