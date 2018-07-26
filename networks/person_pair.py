@@ -12,10 +12,10 @@ class person_pair(nn.Module):
     def __init__(self, num_classes = 3, pretrained=False):
         super(person_pair, self).__init__()
         self.resnet101_union = models.resnet101(pretrained=pretrained)
-        self.resnet101_union = nn.Sequential.(*list(self.resnet101_union.children())[:-1])
+        self.resnet101_union = nn.Sequential(*list(self.resnet101_union.children())[:-1])
 
         self.resnet101_a = models.resnet101(pretrained=pretrained)
-        self.resnet101_a = nn.Sequential.(*list(self.resnet101_a.children())[:-1])
+        self.resnet101_a = nn.Sequential(*list(self.resnet101_a.children())[:-1])
 
         self.resnet101_b = self.resnet101_a
 
@@ -34,7 +34,8 @@ class person_pair(nn.Module):
         x2 = self.resnet101_a(x2)
         x3 = self.resnet101_b(x3)
         x4 = self.bboxes(x4)
-
+	
+	print(x1.size(), x2.size(), x3.size(), x4.size())
         x = torch.cat((x4, x1, x2, x3), 1)
         x = self.Dropout(x)
         fc6 = self.fc6(x)
