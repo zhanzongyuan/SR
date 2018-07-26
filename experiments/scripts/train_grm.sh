@@ -13,7 +13,7 @@ lr=0.001
 # Weight decay
 weight_decay=0.0001
 # Batch size for train
-batch_size=8
+batch_size=2
 # momentum
 momentum=0.9
 # Number of classes
