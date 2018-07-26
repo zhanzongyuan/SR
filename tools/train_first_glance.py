@@ -93,10 +93,11 @@ def main():
 	model = First_Glance(num_classes=args.num_classes, pretrained=True)
 	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=args.momentum)
 
-	"""Load checkpoint weight of network.
+	"""Load checkpoint and weight of network.
 	"""
-	global cp_recorder = Checkpoint(args.checkpoint_path, 'train_first_glance')
+	global cp_recorder
 	if args.checkpoint_dir:
+		cp_recorder = Checkpoint(args.checkpoint_dir, 'train_first_glance')
 		cp_recorder.load_checkpoint(model)
 	
 	model.cuda()
