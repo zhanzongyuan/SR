@@ -37,11 +37,11 @@ parser.add_argument('data', metavar='DIR', help='path to dataset')
 parser.add_argument('objects', metavar='DIR', help='path to objects (bboxes and categories)')
 parser.add_argument('trainlist', metavar='DIR', help='path to train list')
 parser.add_argument('testlist', metavar='DIR', help='path to test list')
-parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
-					help='number of data loading workers (defult: 4)')
 
-"""The training arguments including optimizer's argument.
+
+"""The training arguments including optimizer's arguments.
 """
+# primary
 parser.add_argument('-b', '--batch-size', default=1, type=int, metavar='N',
 					help='mini-batch size (default: 1)')
 parser.add_argument('--lr', '--learning-rate', default=0.0001, type=float, metavar='N',
@@ -52,25 +52,34 @@ parser.add_argument('--wd', '--weight-decay', default=0.0001, type=float, metava
 					help='optimizer\'s weight-decay in training')
 parser.add_argument('-e', '--epoch', default=100, type=int, metavar='N',
 					help='training epoch number')
-
-"""Other argument.
-"""
-parser.add_argument('--print-freq', '-p', default=10, type=int, metavar='N',
-					help='print frequency (default: 10)')
-parser.add_argument('--weights', default='', type=str, metavar='PATH',
-					help='path to weights (default: none)')
-parser.add_argument('--checkpoint', default='', type=str, metavar='PATH',
-					help='path to checkpoint weight (default: none)')
-parser.add_argument('--scale-size',default=256, type=int,
-					help='input size')
+parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
+					help='number of data loading workers (defult: 4)')
+# secondary
 parser.add_argument('--world-size', default=1, type=int,
 					help='number of distributed processes')
 parser.add_argument('-n', '--num-classes', default=3, type=int, metavar='N',
 					help='number of classes / categories')
 parser.add_argument('--crop-size',default=224, type=int,
 					help='crop size')
+parser.add_argument('--scale-size',default=256, type=int,
+					help='input size')
+
+
+"""Record arguments.
+"""
+parser.add_argument('--print-freq', '-p', default=10, type=int, metavar='N',
+					help='print frequency (default: 10)')
 parser.add_argument('--result-path', default='', type=str, metavar='PATH',
 					help='path for saving result (default: none)')
+
+
+"""Model arguments
+"""
+parser.add_argument('--checkpoint', default='', type=str, metavar='PATH',
+					help='path to load checkpoint weight (default: none)')
+parser.add_argument('--weights', default='', type=str, metavar='PATH',
+					help='path to save weights (default: none)')
+
 
 best_prec1 = 0
 
