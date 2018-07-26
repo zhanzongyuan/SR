@@ -1,6 +1,9 @@
 #!/bin/bash
 # Initial logs
-rm -rf ./experiments/logs/train_grm
+# rm -rf ./experiments/logs/train_first_glance
+mkdir ./experiments/logs
+mkdir ./models
+mkdir ./experiments/history
 
 ################## Train arguments ###############
 # Train epoch
@@ -31,20 +34,15 @@ TestList="data/list/PISC_fine_level_test.txt"
 
 ################## Record arguments ###############
 # Path to save scores
-ResultPath="experiments/logs/train_grm"
+ResultPath="experiments/logs/train_first_glance"
 # Print frequence
 print_freq=100
+# Dir to load/save model checkpoint
+CheckpointDir="models/"
+# File name
+FileName="first_glance_finetune"
 
-
-################## Model arguments ###############
-# Path to load fine-tune First Glance model
-FirstGlancePath="models/First_Glance_fine.pth"
-# Path to save checkpoint model
-ModelPath="models/GRM_checkpoint.pth"
-# Path to load checkpoint model
-CheckpointPath=""
-
-python ./tools/train_grm.py \
+CUDA_VISIBLE_DEVICES=0 python ./tools/train_first_glance.py \
     $ImagePath \
     $ObjectsPath \
     $TrainList \
@@ -58,7 +56,6 @@ python ./tools/train_grm.py \
     -j $worker \
     --print-freq $print_freq \
     --result-path $ResultPath \
-    --fg-path $FirstGlancePath \
-    --checkpoint $CheckpointPath \
-    --weights $ModelPath
+    --checkpoint-dir $CheckpointDir \
+    --checkpoint-name $FileName
 

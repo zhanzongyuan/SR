@@ -83,10 +83,11 @@ parser.add_argument('--checkpoint-name', default='', type=str, metavar='PATH',
 def main():
 	# global args, best_prec1
 	args = parser.parse_args()
+	print('\n====> Input Arguments')
 	print(args)
 
 	# Create dataloader.
-	print '====> Creating dataloader...'
+	print '\n====> Creating dataloader...'
 	train_loader = get_train_loader(args)
 	test_loader = get_test_loader(args)
 
@@ -161,7 +162,7 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 	
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader):
 		# Jump to checkpoint.
-		if i < b_batch:
+		if i <= b_batch:
 			continue
 
 		target = target.cuda(async=True)
