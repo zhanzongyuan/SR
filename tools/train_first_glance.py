@@ -59,6 +59,8 @@ parser.add_argument('--print-freq', '-p', default=10, type=int, metavar='N',
 					help='print frequency (default: 10)')
 parser.add_argument('--weights', default='', type=str, metavar='PATH',
 					help='path to weights (default: none)')
+parser.add_argument('--checkpoint', default='', type=str, metavar='PATH',
+					help='path to checkpoint weight (default: none)')
 parser.add_argument('--scale-size',default=256, type=int,
 					help='input size')
 parser.add_argument('--world-size', default=1, type=int,
@@ -85,19 +87,19 @@ def main():
 
 	# Load First Glance network.
 	print '====> Loading the network...'
-	model = First_Glance(num_classes=args.num_classes)
+	model = First_Glance(num_classes=args.num_classes, pretrained=True)
 	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 
-	"""Load fine-tuned weight of network.
+	"""Load checkpoint weight of network.
 	"""
-	if args.weights:
-		if os.path.isfile(args.weights):
-			print("====> loading model '{}'".format(args.weights))
-			checkpoint = torch.load(args.weights)
+	if args.checkpoint:
+		if os.path.isfile(args.checkpoint):
+			print("====> loading model '{}'".format(args.checkpoint))
+			checkpoint = torch.load(args.checkpoint)
 			# checkpoint_dict = {k.replace('module.',''):v for k,v in checkpoint['state_dict'].items()}
 			model.load_state_dict(checkpoint)
 		else:
-			print("====> no pretrain model at '{}'".format(args.weights))
+			print("====> no pretrain model at '{}'".format(args.checkpoint))
 	
 	
 	model.cuda()

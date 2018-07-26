@@ -45,5 +45,6 @@ python ./tools/train_first_glance.py \
     -e $epoch \
     -j $worker \
     --print-freq 100 \
-    --result-path $ResultPath
+    --result-path $ResultPath \
+    --checkpoint '' #$ResultPath
 
