@@ -31,6 +31,9 @@ TrainList="data/list/PISC_fine_level_train.txt"
 # Path to test list
 TestList="data/list/PISC_fine_level_test.txt"
 
+################## Graph arguments ###############
+# Path to adjacency matrix
+AdjMatrix="data/adjacencyMatrix/PISC_fine_level_matrix.npy"
 
 ################## Record arguments ###############
 # Path to save scores
@@ -58,6 +61,7 @@ CUDA_VISIBLE_DEVICES=0 python ./tools/train_grm.py \
     -e $epoch \
     -j $worker \
     --print-freq $print_freq \
+    --adjacency-matrix $AdjMatrix \
     --result-path $ResultPath \
     --checkpoint-dir $CheckpointDir \
     --checkpoint-name $FileName \
