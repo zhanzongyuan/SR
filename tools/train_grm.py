@@ -110,7 +110,7 @@ def main():
 	# Load First-Glance network.
 	print '====> Loading the finetune First Glance model...'
 	if args.fg_finetune and os.path.isfile(args.fg_finetune):
-		models.fg.load_state_dict(torch.load(args.fg_finetune))
+		model.fg.load_state_dict(torch.load(args.fg_finetune))
 	else:
 		print("No find '{}'".format(args.fg_finetune))
 		
