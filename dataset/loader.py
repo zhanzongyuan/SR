@@ -32,12 +32,12 @@ def get_test_loader(args):
 									 std=[0.229, 0.224, 0.225])
 
 	test_data_transform = transforms.Compose([
-			transforms.Scale((crop_size, crop_size)),
+			transforms.Resize((crop_size, crop_size)),
 			transforms.ToTensor(),
 			normalize])  # what about horizontal flip
 
 	test_full_transform = transforms.Compose([
-			transforms.Scale((448, 448)),
+			transforms.Resize((448, 448)),
 			transforms.ToTensor(),
 			normalize])  # what about horizontal flip
 
@@ -74,12 +74,12 @@ def get_train_loader(args):
 									 std=[0.229, 0.224, 0.225])
 
 	train_data_transform = transforms.Compose([
-			transforms.Scale((crop_size, crop_size)),
+			transforms.Resize((crop_size, crop_size)),
 			transforms.ToTensor(),
 			normalize])  # what about horizontal flip
 
 	train_full_transform = transforms.Compose([
-			transforms.Scale((448, 448)),
+			transforms.Resize((448, 448)),
 			transforms.ToTensor(),
 			normalize])  # what about horizontal flip
 
