@@ -78,6 +78,12 @@ parser.add_argument('--checkpoint-dir', default='', type=str, metavar='PATH',
 parser.add_argument('--checkpoint-name', default='', type=str, metavar='PATH',
 					help='filename of checkpoint (default: none)')
 
+"""Pretrain models.
+"""
+parser.add_argument('--fg-finetune', default='', type=str, metavar='PATH',
+					help='path to load finetune first glance model (default: none)')
+
+
 
 
 def main():
@@ -91,13 +97,20 @@ def main():
 	train_loader = get_train_loader(args)
 	test_loader = get_test_loader(args)
 
-	# Load First Glance network.
-	print '====> Loading the network...'
+	# Load GRM network.
+	print '====> Loading the GRM network...'
 	model = GRM(num_classes=args.num_classes, adjacency_matrix=args.adjacency_matrix)
 	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=args.momentum)
 
-	"""Load checkpoint and weight of network.
-	"""
+	# Load First-Glance network.
+	print '====> Loading the finetune First Glance model...'
+	if args.fg_finetune and os.path.isfile(args.fg_finetune):
+		models.fg.load_state_dict(torch.load(args.fg_finetune))
+	else:
+		print("No find '{}'".format(args.fg_finetune))
+		
+
+	# Load checkpoint and weight of network.
 	global cp_recorder
 	if args.checkpoint_dir:
 		cp_recorder = Checkpoint(args.checkpoint_dir, args.checkpoint_name)
@@ -107,7 +120,7 @@ def main():
 	criterion = nn.CrossEntropyLoss().cuda()
 	cudnn.benchmark = True
 			
-	# Train first-glance model.
+	# Train GRM model.
 	print '====> Training...'
 	for epoch in range(cp_recorder.contextual['b_epoch'], args.epoch):
 		_, _, prec_tri, rec_tri, ap_tri = train_eval(train_loader, test_loader, model, criterion, optimizer, args, epoch)

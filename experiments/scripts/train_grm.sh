@@ -42,6 +42,9 @@ CheckpointDir="models/"
 # File name
 FileName="grm_finetune"
 
+################## Pretrained model arguments ###############
+FirstGlanceFinetune="models/first_glance_finetune_best.pth"
+
 CUDA_VISIBLE_DEVICES=0 python ./tools/train_grm.py \
     $ImagePath \
     $ObjectsPath \
@@ -57,5 +60,5 @@ CUDA_VISIBLE_DEVICES=0 python ./tools/train_grm.py \
     --print-freq $print_freq \
     --result-path $ResultPath \
     --checkpoint-dir $CheckpointDir \
-    --checkpoint-name $FileName
-
+    --checkpoint-name $FileName \
+    --fg-finetune $FirstGlanceFinetune
