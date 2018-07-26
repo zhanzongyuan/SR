@@ -30,9 +30,9 @@ class person_pair(nn.Module):
 
     # x1 = pu, x2 = p1, x3 = p2, x4 = bbox geometric info
     def forward(self, x1, x2, x3, x4): 
-        x1 = self.resnet101_union(x1)
-        x2 = self.resnet101_a(x2)
-        x3 = self.resnet101_b(x3)
+        x1 = self.resnet101_union(x1).view(-1, 2048)
+        x2 = self.resnet101_a(x2).view(-1, 2048)
+        x3 = self.resnet101_b(x3).view(-1, 2048)
         x4 = self.bboxes(x4)
 	
 	print(x1.size(), x2.size(), x3.size(), x4.size())
