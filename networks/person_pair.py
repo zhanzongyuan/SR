@@ -27,12 +27,13 @@ class person_pair(nn.Module):
         self.ReLU = nn.ReLU(False)
         self.Dropout = nn.Dropout()
         
-        init_linear_weight(self.bboxes)
-        init_linear_weight(self.fc6)
-        init_linear_weight(self.fc7)
-        if not pretrained:
+       	if not pretrained:
             self._initialize_weights()
-
+	else:
+	    self.init_linear_weight(self.bboxes)
+            self.init_linear_weight(self.fc6)
+            self.init_linear_weight(self.fc7)
+        
         
 
     # x1 = pu, x2 = p1, x3 = p2, x4 = bbox geometric info
