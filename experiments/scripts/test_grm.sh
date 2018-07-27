@@ -20,9 +20,9 @@ CUDA_VISIBLE_DEVICES=0 python ./tools/test_grm.py \
     $ImagePath \
     $ObjectsPath \
     $TestList \
-    --weights $ModelPath \
+    --weights "" \
     --adjacency-matrix $AdjMatrix \
-    -n $num -b 1 \
+    -n $num -b 4 \
     --print-freq 100 \
     --write-out --result-path $ResultPath
 
