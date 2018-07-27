@@ -1,4 +1,7 @@
 # coding=utf-8
+"""code source:
+https://pytorch.org/docs/0.4.0/_modules/torchvision/models/vgg.html#vgg11
+"""
 import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
@@ -255,7 +258,7 @@ class VGG16_ROIS_v1(nn.Module):
         width = bottom.size(3)
 
         # affine theta
-        theta = Variable(rois.data.new(rois.size(0), 2, 3).zero_())
+        theta = rois.data.new(rois.size(0), 2, 3).zero_()
         theta[:, 0:1, 0] = (x2 - x1) / (width - 1)
         theta[:, 0:1, 2] = (x1 + x2 - width + 1) / (width - 1)
         theta[:, 1:2, 1] = (y2 - y1) / (height - 1)

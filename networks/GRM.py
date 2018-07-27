@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torch.autograd import Variable
 from person_pair import person_pair
 from ggnn import GGNN
 from torch.distributions import Bernoulli
@@ -91,7 +90,7 @@ class GRM(nn.Module):
 		"""
 		batch_size = union.size()[0]
 		rois_feature = self.full_im_net(full_im, rois, categories)  # roi_feature has size of [object_num x box_size].
-		contextual = Variable(torch.zeros(batch_size, self._graph_num, self._ggnn_hidden_channel), requires_grad=False).cuda()
+		contextual = torch.zeros(batch_size, self._graph_num, self._ggnn_hidden_channel).cuda()
 		contextual[:, 0:self._num_classes, 0] = 1.  # [1, 0], relationship nodes.
 		contextual[:, self._num_classes:, 1] = 1.  # [0, 1], object nodes.
 
