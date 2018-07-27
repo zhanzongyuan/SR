@@ -29,8 +29,8 @@ class person_pair(nn.Module):
 		
 	   	if not pretrained:
 			self._initialize_weights()
-	else:
-		self.init_linear_weight(self.bboxes)
+		else:
+			self.init_linear_weight(self.bboxes)
 			self.init_linear_weight(self.fc6)
 			self.init_linear_weight(self.fc7)
 		
