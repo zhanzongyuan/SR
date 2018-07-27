@@ -12,16 +12,22 @@ class Checkpoint:
 		self.filename=filename
 		self.best_prec1 = 0
 		self.best_loss = -1
-		self.best=False
+		self.best_p = False
+		self.best_l = False
 	
 	def record_contextual(self, contextual):
 		self.contextual = contextual
-		if self.contextual['prec'] > self.best_prec1 and (self.contextual['loss'] < self.best_loss or self.best_loss = -1):
-			self.best = True
+		if self.contextual['prec'] > self.best_prec1:
+			self.best_p = True
 			self.best_prec1 = self.contextual['prec']
+		else:
+			self.best_p = False
+
+		if self.contextual['loss'] < self.best_loss or self.best_loss = -1:
+			self.best_l = True
 			self.best_loss = self.contextual['loss']
 		else:
-			self.best = False
+			self.best_l = False
 
 
 	def save_checkpoint(self, model):
@@ -35,10 +41,15 @@ class Checkpoint:
 		torch.save(model.state_dict(), path+'.pth')
 		print('...Model saved')
 
-		if (self.best):
-			torch.save(self.contextual, path+'_contextual_best.pth')
-			torch.save(model.state_dict(), path+'_best.pth')
-			print('...Best model and contextual saved')
+		if (self.best_p):
+			torch.save(self.contextual, path+'_contextual_best_p.pth')
+			torch.save(model.state_dict(), path+'_best_p.pth')
+			print('...Max precision model and contextual saved')
+
+		if (self.best_l):
+			torch.save(self.contextual, path+'_contextual_best_l.pth')
+			torch.save(model.state_dict(), path+'_best_l.pth')
+			print('...Min loss model and contextual saved')
 
 	def load_checkpoint(self, model):
 		path = os.path.join(self.checkpoint_dir, self.filename)
@@ -49,12 +60,18 @@ class Checkpoint:
 			self.contextual = torch.load(path+'_contextual.pth')
 
 			# Update best prec.
-			if self.contextual['prec'] > self.best_prec1 and (self.contextual['loss'] < self.best_loss or self.best_loss = -1):
-				self.best = True
+			if self.contextual['prec'] > self.best_prec1:
+				self.best_p = True
 				self.best_prec1 = self.contextual['prec']
+			else:
+				self.best_p = False
+
+			# Update best loss.
+			if self.contextual['loss'] < self.best_loss or self.best_loss = -1:
+				self.best_l = True
 				self.best_loss = self.contextual['loss']
 			else:
-				self.best = False
+				self.best_l = False
 		else:
 			print("====> No checkpoint contextual at '{}'".format(path+'_contextual.pth'))
 
