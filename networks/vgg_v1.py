@@ -228,6 +228,7 @@ class VGG16_ROIS_v1(nn.Module):
         # implement it using stn
         # box to affine
         # input (x1,y1,x2,y2)
+        # code modified from: https://github.com/jwyang/faster-rcnn.pytorch/blob/master/lib/model/utils/net_utils.py#L89
         """
         [  x2-x1             x1 + x2 - W + 1  ]
         [  -----      0      ---------------  ]
