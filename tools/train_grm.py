@@ -151,7 +151,7 @@ def main():
 			'    AP {7}\n'
 			'    mAP {8:.3f}\n'.format(epoch, 
 				prec_tri, rec_tri.mean, ap_tri, np.nan_to_num(ap_tri).mean(),
-				prec_val, rec_val, ap_val, np.nan_to_num(ap_val).mean())
+				prec_val, rec_val, ap_val, np.nan_to_num(ap_val).mean()))
 		
 
 		# Record.
