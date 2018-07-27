@@ -112,39 +112,36 @@ def main():
 	print '====> Training...'
 	for epoch in range(cp_recorder.contextual['b_epoch'], args.epoch):
 		_, _, prec_tri, rec_tri, ap_tri = train_eval(train_loader, test_loader, model, criterion, optimizer, args, epoch)
-		_, _, prec_val, rec_val, ap_val = validate_eval(test_loader, model, criterion, args, epoch)
+		top1_avg_val, loss_avg_val, prec_val, rec_val, ap_val = validate_eval(test_loader, model, criterion, args, epoch)
 
 		# Print result.
-		writer.add_scalars('Prec@1 (per epoch)', {'train': prec_tri.mean()}, epoch)
-		writer.add_scalars('Recall (per epoch)', {'train': rec_tri.mean()}, epoch)
-		writer.add_scalars('mAP (per epoch)', {'train': ap_tri.mean()}, epoch)
-
-		writer.add_scalars('Prec@1 (per epoch)', {'valid': prec_val.mean()}, epoch)
-		writer.add_scalars('Recall (per epoch)', {'valid': rec_val.mean()}, epoch)
-		writer.add_scalars('mAP (per epoch)', {'valid': ap_val.mean()}, epoch)
+		writer.add_scalars('mAP (per epoch)', {'train': np.nan_to_num(ap_tri).mean()}, epoch)
+		writer.add_scalars('mAP (per epoch)', {'valid': np.nan_to_num(ap_val).mean()}, epoch)
+		print('\n====> Scores')
+		print('[Epoch {0}]:\n'
+			'  Train:\n'
+			'    Prec@1 {1}\n'
+			'    Recall {2}\n'
+			'    AP {3}\n'
+			'    mAP {4:.3f}\n'
+			'  Valid:\n'
+			'    Prec@1 {5}\n'
+			'    Recall {6}\n'
+			'    AP {7}\n'
+			'    mAP {8:.3f}\n'.format(epoch, 
+				prec_tri, rec_tri.mean, ap_tri, np.nan_to_num(ap_tri).mean(),
+				prec_val, rec_val, ap_val, np.nan_to_num(ap_val).mean())
 		
-		print('\n====> Train Scores')
-		print('Train Prec', prec_tri)
-		print('Train Recall', rec_tri)
-		print('Train AP', ap_tri)
 
-		print('\n====> Valid Scores')
-		print('Valid Prec', prec_val)
-		print('Valid Recall', rec_val)
-		print('Valid AP', ap_val)
+		# Record.
+		writer.add_scalars('Loss (per batch)', {'valid': loss_avg_val}, (epoch+1)*len(train_loader))
+		writer.add_scalars('Prec@1 (per batch)', {'valid': top1_avg_val}, (epoch+1)*len(train_loader))
+		writer.add_scalars('mAP (per batch)', {'valid': np.nan_to_num(ap_val).mean()}, (epoch+1)*len(train_loader))
 
-		print('\n====> Mean Scores')
-		print('[Epoch {0}]:\n  '
-			'Train:\n    '
-			'Prec@1 {1:.3f}\n    '
-			'Recall {2:.3f}\n    '
-			'mAP {3:.3f}\n  '
-			'Valid:\n    '
-			'Prec@1 {4:.3f}\n    '
-			'Recall {5:.3f}\n    '
-			'mAP {6:.3f}\n'.format(epoch, 
-				prec_tri.mean(), rec_tri.mean(), ap_tri.mean(), 
-				prec_val.mean(), rec_val.mean(), ap_val.mean()))
+		# Save checkpoint.
+		cp_recorder.record_contextual({'b_epoch': epoch, 'b_batch': i, 'prec': top1_avg_val, 'loss': loss_avg_val, 
+			'class_prec': prec_val, 'class_recall': rec_val, 'class_ap': ap_val, 'mAP': np.nan_to_num(ap_val).mean()})
+		cp_recorder.save_checkpoint(model)
 
 def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoch, fnames=[]):
 	batch_time = AverageMeter()
@@ -209,9 +206,11 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 			top1_avg_val, loss_avg_val, prec, recall, ap = validate_eval(val_loader, model, criterion, args, epoch)
 			writer.add_scalars('Loss (per batch)', {'valid': loss_avg_val}, niter)
 			writer.add_scalars('Prec@1 (per batch)', {'valid': top1_avg_val}, niter)
+			writer.add_scalars('mAP (per batch)', {'valid': np.nan_to_num(ap).mean()}, niter)
 
 			# Save checkpoint every 100 batches.
-			cp_recorder.record_contextual({'b_epoch': epoch, 'b_batch': i, 'prec': top1_avg_val, 'loss': loss_avg_val})
+			cp_recorder.record_contextual({'b_epoch': epoch, 'b_batch': i, 'prec': top1_avg_val, 'loss': loss_avg_val, 
+				'class_prec': prec, 'class_recall': recall, 'class_ap': ap, 'mAP': np.nan_to_num(ap).mean()})
 			cp_recorder.save_checkpoint(model)
 		
 		# Record scores.

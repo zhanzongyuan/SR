@@ -31,6 +31,7 @@ def accuracy(output, target, topk=(1,)):
 
 import sklearn.metrics as metrics
 import numpy as np
+from sklearn.preprocessing import OneHotEncoder
 
 def multi_scores(pre_scores, labels, options=['precision', 'recall', 'average_precision']):
 	"""Make use of metrics.precision_score, metrics.recall_score, metrics.average_precision_score
@@ -38,19 +39,19 @@ def multi_scores(pre_scores, labels, options=['precision', 'recall', 'average_pr
 	pre_scores = np.nan_to_num(pre_scores)
 	result = {}
 	num_classes = pre_scores.shape[1]
+	enc = OneHotEncoder()
 	for op in options:
 		if op == 'precision':
 			scores = metrics.precision_score(labels, np.argmax(pre_scores, axis=1), labels=list(range(num_classes)), average=None)
 		elif op == 'recall':
 			scores = metrics.recall_score(labels, np.argmax(pre_scores, axis=1), labels=list(range(num_classes)), average=None)
 		elif op == 'average_precision':
-			scores = np.zeros((pre_scores.shape[1], ))
-			for l in range(pre_scores.shape[1]):
-				scores[l] = metrics.average_precision_score((labels == l).astype(int), pre_scores[:, l])
+			# Labels one-hot encoding.
+			enc.fit(np.arange(pre_scores.shape[0]).reshape(-1, 1))
+			labels_oh = enc.transform(labels.reshape(-1, 1)).toarray()
+			scores = metrics.average_precision_score(labels_oh, pre_scores, average=None)
 		else:
-			result.append({})
 			continue
-		
-		result[op] = np.nan_to_num(scores)
+		result[op] = scores
 	
 	return result

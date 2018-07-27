@@ -8,6 +8,10 @@ class Checkpoint:
 		self.contextual['b_batch'] = -1
 		self.contextual['prec'] = 0
 		self.contextual['loss'] = 0
+		self.contextual['class_prec'] = []
+		self.contextual['class_recall'] = []
+		self.contextual['class_ap'] = []
+		self.contextual['mAP'] = 0
 		self.checkpoint_dir = checkpoint_dir
 		self.filename=filename
 		self.best_prec1 = 0
@@ -50,6 +54,7 @@ class Checkpoint:
 			torch.save(self.contextual, path+'_contextual_best_l.pth')
 			torch.save(model.state_dict(), path+'_best_l.pth')
 			print('...Min loss model and contextual saved')
+
 
 	def load_checkpoint(self, model):
 		path = os.path.join(self.checkpoint_dir, self.filename)
