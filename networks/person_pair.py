@@ -27,6 +27,9 @@ class person_pair(nn.Module):
         self.ReLU = nn.ReLU(False)
         self.Dropout = nn.Dropout()
         
+        init_linear_weight(self.bboxes)
+        init_linear_weight(self.fc6)
+        init_linear_weight(self.fc7)
         if not pretrained:
             self._initialize_weights()
 
@@ -61,4 +64,10 @@ class person_pair(nn.Module):
                 m.bias.data.zero_()
             elif isinstance(m, nn.Linear):
                 m.weight.data.normal_(0, 0.01)
-                m.bias.data.zero_()                
+                m.bias.data.zero_()
+
+    def init_linear_weight(self, m):
+        if type(m) == nn.Linear:
+            m.weight.data.normal_(0, 0.01)
+            m.bias.data.zero_()
+
