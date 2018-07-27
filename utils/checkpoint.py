@@ -23,7 +23,7 @@ class Checkpoint:
 		else:
 			self.best_p = False
 
-		if self.contextual['loss'] < self.best_loss or self.best_loss = -1:
+		if self.contextual['loss'] < self.best_loss or self.best_loss == -1:
 			self.best_l = True
 			self.best_loss = self.contextual['loss']
 		else:
@@ -67,7 +67,7 @@ class Checkpoint:
 				self.best_p = False
 
 			# Update best loss.
-			if self.contextual['loss'] < self.best_loss or self.best_loss = -1:
+			if self.contextual['loss'] < self.best_loss or self.best_loss == -1:
 				self.best_l = True
 				self.best_loss = self.contextual['loss']
 			else:
