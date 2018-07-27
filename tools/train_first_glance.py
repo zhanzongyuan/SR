@@ -94,7 +94,6 @@ def main():
 	# Load First Glance network.
 	print '====> Loading the network...'
 	model = First_Glance(num_classes=args.num_classes, pretrained=True)
-	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=args.momentum)
 
 	"""Load checkpoint and weight of network.
 	"""
@@ -103,9 +102,11 @@ def main():
 		cp_recorder = Checkpoint(args.checkpoint_dir, args.checkpoint_name)
 		cp_recorder.load_checkpoint(model)
 	
+
 	model.cuda()
 	criterion = nn.CrossEntropyLoss().cuda()
 	cudnn.benchmark = True
+	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=args.momentum)
 			
 	# Train first-glance model.
 	print '====> Training...'

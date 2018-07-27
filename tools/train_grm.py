@@ -105,7 +105,6 @@ def main():
 	# Load GRM network.
 	print '====> Loading the GRM network...'
 	model = GRM(num_classes=args.num_classes, adjacency_matrix=args.adjacency_matrix)
-	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=args.momentum)
 
 	# Load First-Glance network.
 	print '====> Loading the finetune First Glance model...'
@@ -121,10 +120,15 @@ def main():
 		cp_recorder = Checkpoint(args.checkpoint_dir, args.checkpoint_name)
 		cp_recorder.load_checkpoint(model)
 	
+	
+	model.fg = torch.nn.DataParallel(model.fg)
+	model.full_im_net = torch.nn.DataParallel(model.full_im_net)
 	model.cuda()
 	criterion = nn.CrossEntropyLoss().cuda()
 	cudnn.benchmark = True
-			
+	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=args.momentum)
+
+
 	# Train GRM model.
 	print '====> Training...'
 	for epoch in range(cp_recorder.contextual['b_epoch'], args.epoch):
