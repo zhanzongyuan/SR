@@ -161,7 +161,11 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 	if epoch == cp_recorder.contextual['b_epoch']:
 		b_batch = cp_recorder.contextual['b_batch']+1
 	
-	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader, start=b_batch):
+	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(train_loader):
+		# Jump to contextual batch
+		if i < b_batch:
+			continue
+
 		target = target.cuda(async=True)
 		union = union.cuda()
 		obj1 = obj1.cuda()
