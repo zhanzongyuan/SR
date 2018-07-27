@@ -11,13 +11,15 @@ class Checkpoint:
 		self.checkpoint_dir = checkpoint_dir
 		self.filename=filename
 		self.best_prec1 = 0
+		self.best_loss = -1
 		self.best=False
 	
 	def record_contextual(self, contextual):
 		self.contextual = contextual
-		if self.contextual['prec'] > self.best_prec1:
+		if self.contextual['prec'] > self.best_prec1 and (self.contextual['loss'] < self.best_loss or self.best_loss = -1):
 			self.best = True
 			self.best_prec1 = self.contextual['prec']
+			self.best_loss = self.contextual['loss']
 		else:
 			self.best = False
 
@@ -47,9 +49,10 @@ class Checkpoint:
 			self.contextual = torch.load(path+'_contextual.pth')
 
 			# Update best prec.
-			if self.contextual['prec'] > self.best_prec1:
+			if self.contextual['prec'] > self.best_prec1 and (self.contextual['loss'] < self.best_loss or self.best_loss = -1):
 				self.best = True
 				self.best_prec1 = self.contextual['prec']
+				self.best_loss = self.contextual['loss']
 			else:
 				self.best = False
 		else:
