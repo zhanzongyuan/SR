@@ -97,10 +97,9 @@ class GRM(nn.Module):
 		start_idx = 0
 		end_idx = 0
 
-
 		# Initial GGNN graph hidden status, fill the roi features to object nodes according to categories.
 		for b in range(batch_size):
-			cur_rois_num = categories[b, 0].data[0]  # Rois object number. It is not fixed.
+			cur_rois_num = categories[b, 0].item()  # Rois object number. It is not fixed.
 			end_idx += cur_rois_num
 			idxs = categories[b, 1:(cur_rois_num+1)].data.tolist()
 			for i in range(cur_rois_num):

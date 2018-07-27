@@ -189,12 +189,12 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 			continue
 
 		# Create bboxes
-		batch_size = bboxes_14.shape[0]
-		cur_rois_sum = categories[0,0]
-		bboxes = bboxes_14[0, 0:categories[0,0], :]
+		batch_size = bboxes_14.size(0)
+		cur_rois_sum = categories[0,0].item()
+		bboxes = bboxes_14[0, 0:categories[0,0].item(), :]
 		for b in range(1, batch_size):
 			bboxes = torch.cat((bboxes, bboxes_14[b, 0:categories[b,0], :]), 0)
-			cur_rois_sum += categories[b,0]
+			cur_rois_sum += categories[b,0].item()
 		assert(bboxes.size(0) == cur_rois_sum), 'Bboxes num must equal to categories num'
 
 		target = target.cuda(async=True)
@@ -279,12 +279,12 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(val_loader):
 		with torch.no_grad():
 			# Create bboxes
-			batch_size = bboxes_14.shape[0]
-			cur_rois_sum = categories[0,0]
-			bboxes = bboxes_14[0, 0:categories[0,0], :]
+			batch_size = bboxes_14.size(0)
+			cur_rois_sum = categories[0,0].item()
+			bboxes = bboxes_14[0, 0:categories[0,0].item(), :]
 			for b in range(1, batch_size):
 				bboxes = torch.cat((bboxes, bboxes_14[b, 0:categories[b,0], :]), 0)
-				cur_rois_sum += categories[b,0]
+				cur_rois_sum += categories[b,0].item()
 			assert(bboxes.size(0) == cur_rois_sum), 'Bboxes num must equal to categories num'
 
 			target = target.cuda(async=True)
