@@ -3,3 +3,4 @@ models/*
 experiments/logs/*
 experiments/history/*
 .vscode/*
+*/*.pyc
