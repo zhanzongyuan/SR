@@ -17,8 +17,6 @@ import torch.nn.functional as F
 import gc
 
 from tensorboardX import SummaryWriter
-writer=SummaryWriter(log_dir='./experiments/logs/train_first_glance')
-
 import _init_paths
 
 from utils.metrics import AverageMeter, accuracy, multi_scores
@@ -85,6 +83,9 @@ def main():
 	args = parser.parse_args()
 	print('\n====> Input Arguments')
 	print(args)
+	# Tensorboard writer.
+	global writer=SummaryWriter(log_dir=args.result_path)
+
 
 	# Create dataloader.
 	print '\n====> Creating dataloader...'
