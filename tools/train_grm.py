@@ -277,7 +277,7 @@ def validate_eval(val_loader, model, criterion, args, epoch=None, fnames=[]):
 	end = time.time()
 	scores = np.zeros((len(val_loader.dataset), args.num_classes))
 	labels = np.zeros((len(val_loader.dataset), ))
-	for i, (union, obj1, obj2, bpos, target, _, _, _) in enumerate(val_loader):
+	for i, (union, obj1, obj2, bpos, target, full_im, bboxes_14, categories) in enumerate(val_loader):
 		with torch.no_grad():
 			# Create bboxes
 			batch_size = bboxes_14.size(0)
