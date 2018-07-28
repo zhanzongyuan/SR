@@ -129,7 +129,7 @@ def main():
 			'    Recall {6}\n'
 			'    AP {7}\n'
 			'    mAP {8:.3f}\n'.format(epoch, 
-				prec_tri, rec_tri.mean, ap_tri, np.nan_to_num(ap_tri).mean(),
+				prec_tri, rec_tri, ap_tri, np.nan_to_num(ap_tri).mean(),
 				prec_val, rec_val, ap_val, np.nan_to_num(ap_val).mean()))
 		
 
@@ -139,7 +139,7 @@ def main():
 		writer.add_scalars('mAP (per batch)', {'valid': np.nan_to_num(ap_val).mean()}, (epoch+1)*len(train_loader))
 
 		# Save checkpoint.
-		cp_recorder.record_contextual({'b_epoch': epoch, 'b_batch': i, 'prec': top1_avg_val, 'loss': loss_avg_val, 
+		cp_recorder.record_contextual({'b_epoch': epoch+1, 'b_batch': -1, 'prec': top1_avg_val, 'loss': loss_avg_val, 
 			'class_prec': prec_val, 'class_recall': rec_val, 'class_ap': ap_val, 'mAP': np.nan_to_num(ap_val).mean()})
 		cp_recorder.save_checkpoint(model)
 
