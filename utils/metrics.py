@@ -47,7 +47,7 @@ def multi_scores(pre_scores, labels, options=['precision', 'recall', 'average_pr
 			scores = metrics.recall_score(labels, np.argmax(pre_scores, axis=1), labels=list(range(num_classes)), average=None)
 		elif op == 'average_precision':
 			# Labels one-hot encoding.
-			enc.fit(np.arange(pre_scores.shape[1]).reshape(-1, 1))
+			enc.fit(np.arange(num_classes).reshape(-1, 1))
 			labels_oh = enc.transform(labels.reshape(-1, 1)).toarray()
 			scores = metrics.average_precision_score(labels_oh, pre_scores, average=None)
 		else:
