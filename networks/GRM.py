@@ -88,11 +88,17 @@ class GRM(nn.Module):
 			final_scores:
 
 		"""
-		batch_size = union.size()[0]
-		rois_feature = self.full_im_net(full_im, rois, categories)  # roi_feature has size of [object_num x box_size].
-		contextual = torch.zeros(batch_size, self._graph_num, self._ggnn_hidden_channel).cuda()
-		contextual[:, 0:self._num_classes, 0] = 1.  # [1, 0], relationship nodes.
-		contextual[:, self._num_classes:, 1] = 1.  # [0, 1], object nodes.
+
+		with torch.no_grad:
+			# First glance scores.
+			_, fc7_feature = self.fg(union, b1, b2, b_geometric)
+
+			# Get roi feature and patch feature.
+			batch_size = union.size()[0]
+			rois_feature = self.full_im_net(full_im, rois, categories)  # roi_feature has size of [object_num x box_size].
+			contextual = torch.zeros(batch_size, self._graph_num, self._ggnn_hidden_channel).cuda()
+			contextual[:, 0:self._num_classes, 0] = 1.  # [1, 0], relationship nodes.
+			contextual[:, self._num_classes:, 1] = 1.  # [0, 1], object nodes.
 
 		start_idx = 0
 		end_idx = 0
@@ -106,8 +112,6 @@ class GRM(nn.Module):
 				contextual[b, int(idxs[i])+self._num_classes, 2:] = rois_feature[start_idx+i, :]  # Fill the roi features to object nodes according to categories.
 			start_idx = end_idx
 
-		# First glance scores.
-		scores, fc7_feature = self.fg(union, b1, b2, b_geometric)
 		
 		# GGNN input, fill the pair feature to all the relationship nodes.
 		fc7_feature_norm_enlarge = fc7_feature.view(batch_size, 1, -1).repeat(1, self._num_classes, 1)
