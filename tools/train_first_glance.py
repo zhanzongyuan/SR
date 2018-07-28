@@ -84,7 +84,8 @@ def main():
 	print('\n====> Input Arguments')
 	print(args)
 	# Tensorboard writer.
-	global writer=SummaryWriter(log_dir=args.result_path)
+	global writer
+	writer = SummaryWriter(log_dir=args.result_path)
 
 
 	# Create dataloader.
