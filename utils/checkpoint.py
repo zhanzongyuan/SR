@@ -83,6 +83,11 @@ class Checkpoint:
 		# Load model.
 		if path and os.path.isfile(path+'.pth'):
 			print("====> Loading model '{}'...".format(path+'.pth'))
-			model.load_state_dict(torch.load(path+'.pth'))
+			state_dict = torch.load(path+'.pth')
+			keys = model.state_dict().keys()
+			new_state_dict = {}
+			for i, k in enumerate(state_dict.keys()):
+				new_state_dict[keys[i]] = state_dict[k]
+			model.load_state_dict(new_state_dict)
 		else:
 			print("====> No pretrain model at '{}'".format(path+'.pth'))
