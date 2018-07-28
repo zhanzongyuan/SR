@@ -89,7 +89,7 @@ class GRM(nn.Module):
 
 		"""
 
-		with torch.no_grad:
+		with torch.no_grad():
 			# First glance scores.
 			_, fc7_feature = self.fg(union, b1, b2, b_geometric)
 
