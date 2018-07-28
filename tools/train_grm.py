@@ -135,7 +135,7 @@ def main():
 	print '====> Training...'
 	for epoch in range(cp_recorder.contextual['b_epoch'], args.epoch):
 		_, _, prec_tri, rec_tri, ap_tri = train_eval(train_loader, test_loader, model, criterion, optimizer, args, epoch)
-		_, _, prec_val, rec_val, ap_val = validate_eval(test_loader, model, criterion, args, epoch)
+		top1_avg_val, loss_avg_val, prec_val, rec_val, ap_val = validate_eval(test_loader, model, criterion, args, epoch)
 
 		# Print result.
 		writer.add_scalars('mAP (per epoch)', {'train': np.nan_to_num(ap_tri).mean()}, epoch)
