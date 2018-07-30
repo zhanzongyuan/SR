@@ -128,13 +128,13 @@ def main():
 	model.cuda()
 	criterion = nn.CrossEntropyLoss().cuda()
 	cudnn.benchmark = True
-	optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=args.momentum)
-
+	optimizer_cls = torch.optim.SGD(model.classifier.parameters(), lr=args.lr, weight_decay=args.wd, momentum=args.momentum)
+	optimizer_ggnn = torch.optim.Adam(model.ggnn.parameters(), lr=0.00001, weight_decay=args.wd)
 
 	# Train GRM model.
 	print '====> Training...'
 	for epoch in range(cp_recorder.contextual['b_epoch'], args.epoch):
-		_, _, prec_tri, rec_tri, ap_tri = train_eval(train_loader, test_loader, model, criterion, optimizer, args, epoch)
+		_, _, prec_tri, rec_tri, ap_tri = train_eval(train_loader, test_loader, model, criterion, optimizer_cls, optimizer_ggnn, args, epoch)
 		top1_avg_val, loss_avg_val, prec_val, rec_val, ap_val = validate_eval(test_loader, model, criterion, args, epoch)
 
 		# Print result.
@@ -166,7 +166,7 @@ def main():
 			'class_prec': prec_val, 'class_recall': rec_val, 'class_ap': ap_val, 'mAP': np.nan_to_num(ap_val).mean()})
 		cp_recorder.save_checkpoint(model)
 
-def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoch, fnames=[]):
+def train_eval(train_loader, val_loader, model, criterion, optimizer_cls, optimizer_ggnn, args, epoch, fnames=[]):
 	batch_time = AverageMeter()
 	losses = AverageMeter()
 	top1 = AverageMeter()
@@ -213,9 +213,11 @@ def train_eval(train_loader, val_loader, model, criterion, optimizer, args, epoc
 		prec1 = accuracy(output.data, target)
 		top1.update(prec1[0], union.size(0))
 
-		optimizer.zero_grad()
+		optimizer_cls.zero_grad()
+		optimizer_ggnn.zero_grad()
 		loss.backward()
-		optimizer.step()
+		optimizer_cls.step()
+		optimizer_ggnn.step()
 
 		batch_time.update(time.time() - end)
 		end = time.time()
